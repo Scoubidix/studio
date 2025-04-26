@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, Sparkles, FileText } from 'lucide-react';
+import { Loader2, Sparkles, FileText, Microscope, AlertTriangle } from 'lucide-react'; // Import Microscope and AlertTriangle
 import { useToast } from '@/hooks/use-toast';
 // TODO: Import the actual Genkit flow for summarization when created
 // import { summarizeMedicalReport } from '@/ai/flows/summarize-medical-report';
