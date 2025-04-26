@@ -22,18 +22,11 @@ interface ChatMessage {
   escalationReason?: string; // Reason from the bot
 }
 
-// --- Mock Data (Replace with actual data fetching logic) ---
-const mockPatientData: Patient = {
-  id: 'patientTest',
-  nom: 'Dupont',
-  prénom: 'Jean',
-  date_naissance: '1985-03-15',
-  pathologies: ['Lombalgie chronique', 'Tendinopathie épaule droite'],
-  remarques: 'Motivé mais craint la douleur.',
-  kine_id: 'kineTest1',
-  objectifs: ['Amélioration de la mobilité lombaire', 'Reprise progressive de la course à pied'], // Objectives for mock patient
-};
+interface PatientChatbotPopupProps {
+    patient: Patient; // Accept patient data as a prop
+}
 
+// --- Mock Data (Physio Knowledge - Keep for now) ---
 const mockPhysioKnowledge = {
   commonExercises: ['Squat', 'Pont fessier', 'Étirement ischio-jambiers', 'Rotation tronc', 'Rowing élastique'],
   painManagementTips: [
@@ -60,7 +53,7 @@ const sendMessageToKine = async (messageData: MessageToKine): Promise<void> => {
 };
 // --- End Mock Data ---
 
-export default function PatientChatbotPopup() {
+export default function PatientChatbotPopup({ patient }: PatientChatbotPopupProps) { // Destructure patient prop
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -86,12 +79,12 @@ export default function PatientChatbotPopup() {
 
    useEffect(() => {
     if (isOpen) {
-      // Add welcome message when opening
-      if (messages.length === 0) {
+      // Add personalized welcome message when opening
+      if (messages.length === 0 && patient) { // Check if patient data is available
            const welcomeMessage: ChatMessage = {
                 id: 'welcome',
                 sender: 'bot',
-                text: `Bonjour ${mockPatientData.prénom}! Comment puis-je vous aider aujourd'hui ?`
+                text: `Bonjour ${patient.prénom}! Comment puis-je vous aider aujourd'hui ?` // Use patient's name
            };
            setMessages([welcomeMessage]);
       }
@@ -107,7 +100,7 @@ export default function PatientChatbotPopup() {
         // Keep messages on close: setMessages([]);
     }
     // Only re-run when isOpen changes or scrollToBottom changes
-  }, [isOpen, scrollToBottom]); // Removed messages dependency to avoid re-adding welcome message
+  }, [isOpen, scrollToBottom, patient, messages.length]); // Add patient and messages.length dependency
 
    useEffect(() => {
     // Scroll to bottom when messages change
@@ -117,7 +110,7 @@ export default function PatientChatbotPopup() {
 
   const handleSendMessage = async () => {
     const userMessage = inputValue.trim();
-    if (!userMessage || isLoading || isEscalating) return;
+    if (!userMessage || isLoading || isEscalating || !patient) return; // Ensure patient data exists
 
     const newUserMessage: ChatMessage = { id: Date.now().toString(), sender: 'user', text: userMessage };
     setMessages(prev => [...prev, newUserMessage]);
@@ -125,16 +118,16 @@ export default function PatientChatbotPopup() {
     setIsLoading(true);
 
     try {
-      // Prepare input for the personalized chatbot flow
+      // Prepare input for the personalized chatbot flow using patient prop
       const input: PersonalizedPatientChatbotInput = {
         question: userMessage,
         patientContext: {
-          id: mockPatientData.id,
-          name: mockPatientData.prénom,
-          condition: mockPatientData.pathologies.join(', '),
-          goals: mockPatientData.objectifs.join(', '), // Use patient objectives
-          currentProgramSummary: "Programme axé renforcement dos/abdos et mobilité épaule.", // Example summary
-          // recentFeedbackSummary: "Douleur modérée (5/10) rapportée hier.", // Example feedback summary
+          id: patient.id,
+          name: patient.prénom,
+          condition: patient.pathologies.join(', '),
+          goals: patient.objectifs.join(', '),
+          currentProgramSummary: "Programme axé renforcement dos/abdos et mobilité épaule.", // Example summary - Fetch this dynamically later
+          // recentFeedbackSummary: "Douleur modérée (5/10) rapportée hier.", // Example feedback summary - Fetch this dynamically later
         },
         physiotherapyKnowledge: mockPhysioKnowledge,
       };
@@ -174,10 +167,11 @@ export default function PatientChatbotPopup() {
   };
 
    const handleStartEscalation = (originalQuestion: string, botReason?: string) => {
+      if (!patient) return; // Need patient info
       setIsEscalating(true);
       setLastUserQuestion(originalQuestion);
       // Pre-fill escalation message slightly
-      setEscalationMessage(`Bonjour, j'ai demandé au chatbot : "${originalQuestion}". ${botReason ? `Il m'a été suggéré de vous contacter car: "${botReason}". ` : ''} Pourriez-vous m'éclairer ?\n\n[Ajoutez vos détails ici]\n\nMerci,\n${mockPatientData.prénom}`);
+      setEscalationMessage(`Bonjour, j'ai demandé au chatbot : "${originalQuestion}". ${botReason ? `Il m'a été suggéré de vous contacter car: "${botReason}". ` : ''} Pourriez-vous m'éclairer ?\n\n[Ajoutez vos détails ici]\n\nMerci,\n${patient.prénom}`);
    };
 
    const handleCancelEscalation = () => {
@@ -191,11 +185,11 @@ export default function PatientChatbotPopup() {
    };
 
    const handleSendEscalationMessage = async () => {
-        if (!escalationMessage.trim() || isLoading) return;
+        if (!escalationMessage.trim() || isLoading || !patient) return; // Need patient info
         setIsLoading(true);
 
         const messageData: MessageToKine = {
-            patient_id: mockPatientData.id,
+            patient_id: patient.id,
             timestamp: new Date().toISOString(),
             original_question: lastUserQuestion,
             chatbot_response: lastBotResponse, // Include if bot gave a reason/response

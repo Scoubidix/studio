@@ -83,11 +83,12 @@ const mockProgram: Program = {
   date_creation: new Date().toISOString(),
 };
 
-// Update mock patient data to include objectifs
+// Update mock patient data to include objectifs and email
 const mockPatientData: Patient = {
   id: 'patientTest',
   nom: 'Dupont',
   prénom: 'Jean',
+  email: 'jean.dupont@email.com', // Added email
   date_naissance: '1985-03-15',
   pathologies: ['Lombalgie chronique', 'Tendinopathie épaule droite'],
   remarques: 'Motivé mais craint la douleur.',
@@ -324,7 +325,7 @@ export default function PatientDashboard() {
 
 
       {/* Patient Chatbot Popup Trigger */}
-      <PatientChatbotPopup />
+      <PatientChatbotPopup patient={mockPatientData} /> {/* Pass patient data */}
 
 
       {/* Session History Section (Placeholder) */}

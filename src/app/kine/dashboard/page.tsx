@@ -3,15 +3,20 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button'; // Import Button
 import PatientSelector from '@/components/kine/patient-selector';
 import PatientInfoForm from '@/components/kine/patient-info-form';
 import PatientFeedbackDisplay from '@/components/kine/patient-feedback-display';
-import NotificationArea from '@/components/kine/notification-area'; // Import NotificationArea
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"; // Import Accordion components
-import type { Patient, Kine, Feedback, MessageToKine } from '@/interfaces'; // Import necessary interfaces
+import NotificationArea from '@/components/kine/notification-area';
+import AddPatientModal from '@/components/kine/add-patient-modal'; // Import AddPatientModal
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import type { Patient, Kine, Feedback, MessageToKine } from '@/interfaces';
+import { mockFeedbacks } from '@/components/kine/mock-data'; // Import shared mock feedbacks
+import { useToast } from '@/hooks/use-toast'; // Import useToast for add patient confirmation
+import { PlusCircle } from 'lucide-react'; // Import icon for Add Patient button
 
-// --- Mock Data (Replace with actual data fetching later) ---
-const mockKine: Kine = {
+// --- Mock Data (Initial Data - now managed by state) ---
+const initialMockKine: Kine = {
     id: 'kineTest1',
     nom: 'Leroy',
     prénom: 'Sophie',
@@ -19,11 +24,12 @@ const mockKine: Kine = {
     spécialité: 'Sport',
 };
 
-const mockPatients: Patient[] = [
+const initialMockPatients: Patient[] = [
     {
         id: 'patientTest',
         nom: 'Dupont',
         prénom: 'Jean',
+        email: 'jean.dupont@email.com', // Added email
         date_naissance: '1985-03-15',
         pathologies: ['Lombalgie chronique', 'Tendinopathie épaule droite'],
         remarques: 'Motivé mais craint la douleur.',
@@ -34,6 +40,7 @@ const mockPatients: Patient[] = [
         id: 'patientTest2',
         nom: 'Martin',
         prénom: 'Claire',
+        email: 'claire.martin@email.com', // Added email
         date_naissance: '1992-07-22',
         pathologies: ['Entorse cheville gauche (récente)'],
         remarques: 'Sportive (Volley), veut reprendre rapidement.',
@@ -44,52 +51,13 @@ const mockPatients: Patient[] = [
         id: 'patientTest3',
         nom: 'Petit',
         prénom: 'Lucas',
+        email: 'lucas.petit@email.com', // Added email
         date_naissance: '2005-11-10',
         pathologies: ['Syndrome rotulien genou droit'],
         remarques: 'Jeune footballeur, en pleine croissance.',
         kine_id: 'kineTest1',
         objectifs: ['Diminution douleur pendant effort', 'Correction posture/gestuelle'],
     },
-];
-
-// Use mockFeedbacks from PatientFeedbackDisplay for notifications
-const mockFeedbacks: Feedback[] = [
-  {
-    id: 'fb1',
-    programme_id: 'prog123',
-    patient_id: 'patientTest',
-    date: new Date(Date.now() - 86400000 * 1).toISOString(),
-    douleur_moyenne: 7, // Increased pain for testing notification
-    difficulté: 6,
-    commentaire_libre: "L'étirement des ischios était très douloureux aujourd'hui.",
-  },
-  {
-    id: 'fb2',
-    programme_id: 'prog123',
-    patient_id: 'patientTest',
-    date: new Date(Date.now() - 86400000 * 3).toISOString(),
-    douleur_moyenne: 4,
-    difficulté: 5,
-    commentaire_libre: "Séance ok, RAS.",
-  },
-  {
-      id: 'fb3',
-      programme_id: 'progXYZ',
-      patient_id: 'patientTest2',
-      date: new Date(Date.now() - 86400000 * 2).toISOString(),
-      douleur_moyenne: 3,
-      difficulté: 7,
-      commentaire_libre: "Les exercices de renforcement de la cheville sont difficiles mais je sens que ça progresse. Pas de douleur particulière.",
-  },
-   {
-      id: 'fb5',
-      programme_id: 'progABC',
-      patient_id: 'patientTest3',
-      date: new Date(Date.now() - 86400000 * 1).toISOString(),
-      douleur_moyenne: 6, // Increased pain for testing notification
-      difficulté: 5,
-      commentaire_libre: "J'ai ressenti une gêne au genou droit pendant les squats.",
-  },
 ];
 
 // Mock Messages to Kiné (escalated from chatbot)
@@ -119,41 +87,34 @@ const mockMessages: MessageToKine[] = [
         status: 'read',
     }
 ];
-
-
 // --- End Mock Data ---
 
 
 export default function KineDashboard() {
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
-  const [kineData] = useState<Kine | null>(mockKine); // Using useState to simulate data loading
+  const [kineData] = useState<Kine | null>(initialMockKine);
+  const [patients, setPatients] = useState<Patient[]>(initialMockPatients); // Manage patients list with state
   const [notifications, setNotifications] = useState<{ feedbackAlerts: Feedback[], messages: MessageToKine[] }>({ feedbackAlerts: [], messages: [] });
+  const [isAddPatientModalOpen, setIsAddPatientModalOpen] = useState(false); // State for Add Patient modal
+  const { toast } = useToast();
 
-  // TODO: Fetch actual kine data based on authentication
-  // TODO: Fetch actual patients list assigned to this kine
-  // TODO: Fetch actual notifications (high pain feedback and unread messages)
-
+  // Update notifications based on current patients list
   useEffect(() => {
-      // Simulate fetching notifications for ALL kine's patients
-      const kinePatientIds = mockPatients.map(p => p.id);
+      const kinePatientIds = patients.map(p => p.id);
 
-      // Filter recent feedback with high pain for this kine's patients
       const highPainFeedback = mockFeedbacks.filter(fb =>
           kinePatientIds.includes(fb.patient_id) && fb.douleur_moyenne > 5
       );
 
-      // Filter unread messages for this kine's patients
       const unreadMessages = mockMessages.filter(msg =>
           kinePatientIds.includes(msg.patient_id) && msg.status === 'unread'
       );
 
-      // Sort notifications by date (most recent first)
       highPainFeedback.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       unreadMessages.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-
       setNotifications({ feedbackAlerts: highPainFeedback, messages: unreadMessages });
-  }, [kineData]); // Re-run if kineData changes
+  }, [kineData, patients]); // Re-run if kineData or patients list changes
 
   const handlePatientSelect = (patientId: string) => {
     setSelectedPatientId(patientId);
@@ -164,13 +125,43 @@ export default function KineDashboard() {
         console.log(`Marking message ${messageId} as read (simulated)`);
         setNotifications(prev => ({
             ...prev,
-            messages: prev.messages.map(msg =>
-                msg.id === messageId ? { ...msg, status: 'read' } : msg
-            ).filter(msg => msg.status !== 'read') // Optimistically remove from display
+            messages: prev.messages.filter(msg => msg.id !== messageId) // Optimistically remove from display
         }));
+        // Update mockMessages state (or refetch) if needed for persistence in demo
+         const index = mockMessages.findIndex(m => m.id === messageId);
+         if (index > -1) mockMessages[index].status = 'read';
     };
 
-  const selectedPatient = mockPatients.find(p => p.id === selectedPatientId);
+   const handleAddPatient = (newPatientData: Omit<Patient, 'id' | 'kine_id' | 'pathologies' | 'remarques' | 'objectifs'>) => {
+      // Simulate adding patient to the database
+      const newPatient: Patient = {
+          ...newPatientData,
+          id: `patientTest${patients.length + 1}`, // Generate a mock ID
+          kine_id: kineData?.id || 'unknownKine',
+          pathologies: [], // Initialize empty arrays
+          remarques: '',
+          objectifs: [],
+      };
+
+      console.log('Simulating adding patient:', newPatient);
+      // TODO: Replace with actual API call to add patient and send email
+
+      // Simulate sending credentials email
+      console.log(`Simulating sending credentials to ${newPatient.email}`);
+      toast({
+          title: "Patient ajouté (Simulation)",
+          description: `${newPatient.prénom} ${newPatient.nom} a été ajouté. Un email avec ses identifiants lui a été envoyé (simulé).`,
+      });
+
+      // Update the local patients list
+      setPatients(prevPatients => [...prevPatients, newPatient]);
+      setIsAddPatientModalOpen(false); // Close the modal
+       // Optionally select the newly added patient
+      setSelectedPatientId(newPatient.id);
+   };
+
+
+  const selectedPatient = patients.find(p => p.id === selectedPatientId); // Use state variable 'patients'
   const selectedPatientName = selectedPatient ? `${selectedPatient.prénom} ${selectedPatient.nom}` : 'le patient sélectionné';
 
   return (
@@ -179,16 +170,22 @@ export default function KineDashboard() {
        <NotificationArea
            feedbackAlerts={notifications.feedbackAlerts}
            messages={notifications.messages}
-           patients={mockPatients} // Pass patients for name lookup
-           onSelectPatient={handlePatientSelect} // Allow clicking notification to select patient
-           onMarkMessageAsRead={handleMarkMessageAsRead} // Allow marking message as read
+           patients={patients} // Pass current patients list
+           onSelectPatient={handlePatientSelect}
+           onMarkMessageAsRead={handleMarkMessageAsRead}
        />
 
       {/* Main Dashboard Header and Patient Selector */}
       <Card className="shadow-md">
-        <CardHeader>
-          <CardTitle>Tableau de Bord Kinésithérapeute</CardTitle>
-          <CardDescription>Gérez vos patients et suivez leurs progrès.</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between pb-4">
+          <div>
+             <CardTitle>Tableau de Bord Kinésithérapeute</CardTitle>
+             <CardDescription>Gérez vos patients et suivez leurs progrès.</CardDescription>
+          </div>
+           <Button onClick={() => setIsAddPatientModalOpen(true)} variant="outline">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Ajouter Patient
+           </Button>
         </CardHeader>
         <CardContent>
            {kineData && (
@@ -197,7 +194,7 @@ export default function KineDashboard() {
                </p>
            )}
           <PatientSelector
-            patients={mockPatients}
+            patients={patients} // Use state variable 'patients'
             onSelectPatient={handlePatientSelect}
             selectedPatientId={selectedPatientId}
           />
@@ -208,21 +205,20 @@ export default function KineDashboard() {
       {selectedPatientId && selectedPatient ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
            {/* Patient Information & Goals (Collapsible) */}
-            <Accordion type="single" collapsible className="w-full lg:col-span-2">
+            <Accordion type="single" collapsible defaultValue="patient-info" className="w-full lg:col-span-2">
               <AccordionItem value="patient-info">
                 <AccordionTrigger className="text-lg font-semibold px-6 py-4 bg-card rounded-t-lg border data-[state=closed]:rounded-b-lg data-[state=closed]:border-b data-[state=open]:border-b-0 hover:no-underline hover:bg-muted/50">
                     Informations & Bilan Initial - {selectedPatientName}
                 </AccordionTrigger>
                 <AccordionContent className="border border-t-0 rounded-b-lg bg-card p-0">
-                  {/* PatientInfoForm is now inside the AccordionContent */}
-                  {/* The Card inside PatientInfoForm might be redundant now, adjust PatientInfoForm if needed */}
+                  {/* Pass the selected patient data and a (mock) save handler */}
                   <PatientInfoForm patient={selectedPatient} />
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
 
            {/* Patient Feedback Display */}
-           <div className="lg:col-span-2"> {/* Make feedback display full width below accordion */}
+           <div className="lg:col-span-2">
                 <PatientFeedbackDisplay patientId={selectedPatientId} />
            </div>
 
@@ -231,11 +227,20 @@ export default function KineDashboard() {
         <Card className="shadow-md">
             <CardContent className="pt-6">
                 <p className="text-center text-muted-foreground">
-                    Veuillez sélectionner un patient pour voir ses informations et feedbacks.
+                   {patients.length > 0
+                      ? "Veuillez sélectionner un patient pour voir ses informations et feedbacks."
+                      : "Aucun patient n'est enregistré. Cliquez sur 'Ajouter Patient' pour commencer."}
                 </p>
             </CardContent>
         </Card>
       )}
+
+       {/* Add Patient Modal */}
+       <AddPatientModal
+           isOpen={isAddPatientModalOpen}
+           onClose={() => setIsAddPatientModalOpen(false)}
+           onPatientAdded={handleAddPatient}
+       />
 
        {/* TODO: Add other Kine features later (e.g., Program Generation, Kine Chatbot) */}
     </div>

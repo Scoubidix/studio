@@ -42,6 +42,7 @@ export interface Patient {
   id: string;
   nom: string;
   prénom: string;
+  email: string; // Added email field
   date_naissance: string; // Consider Date or Timestamp
   pathologies: string[];
   remarques: string;
