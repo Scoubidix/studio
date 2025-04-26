@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -5,17 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'; // Removed DialogClose as it's handled by onOpenChange
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { personalizedPatientChatbot } from '@/ai/flows/patient-chatbot'; // Import the updated Genkit flow
 import type { PersonalizedPatientChatbotInput, PersonalizedPatientChatbotOutput } from '@/ai/flows/patient-chatbot';
 import type { Patient, MessageToKine } from '@/interfaces'; // Import Patient interface
-import { Loader2, User, Bot, MessageSquarePlus, Send, CornerDownLeft, AlertTriangle } from 'lucide-react';
+import { Loader2, User, Bot, MessageSquarePlus, Send, CornerDownLeft, AlertTriangle, Sparkles } from 'lucide-react'; // Added Sparkles
 
 interface ChatMessage {
   id: string;
-  sender: 'user' | 'bot' | 'system'; // Added system for escalation prompts
+  sender: 'user' | 'bot' | 'system'; // Added system for escalation prompts and welcome message
   text: string;
   requiresEscalation?: boolean; // Flag if bot suggests escalation
   escalationReason?: string; // Reason from the bot
@@ -85,18 +86,28 @@ export default function PatientChatbotPopup() {
 
    useEffect(() => {
     if (isOpen) {
+      // Add welcome message when opening
+      if (messages.length === 0) {
+           const welcomeMessage: ChatMessage = {
+                id: 'welcome',
+                sender: 'bot',
+                text: `Bonjour ${mockPatientData.prénom}! Comment puis-je vous aider aujourd'hui ?`
+           };
+           setMessages([welcomeMessage]);
+      }
       // Focus input when opening and scroll down
       inputRef.current?.focus();
       scrollToBottom();
     } else {
-        // Reset chat state when closing
-        // setMessages([]); // Option: clear history on close, or keep it
+        // Reset chat state when closing - optionally keep history
         setIsLoading(false);
         setIsEscalating(false);
         setInputValue('');
         setEscalationMessage('');
+        // Keep messages on close: setMessages([]);
     }
-  }, [isOpen, scrollToBottom]);
+    // Only re-run when isOpen changes or scrollToBottom changes
+  }, [isOpen, scrollToBottom]); // Removed messages dependency to avoid re-adding welcome message
 
    useEffect(() => {
     // Scroll to bottom when messages change
@@ -166,7 +177,7 @@ export default function PatientChatbotPopup() {
       setIsEscalating(true);
       setLastUserQuestion(originalQuestion);
       // Pre-fill escalation message slightly
-      setEscalationMessage(`Bonjour, j'ai demandé au chatbot : "${originalQuestion}". ${botReason ? `Il a répondu : "${botReason}". ` : ''} Pourriez-vous m'aider ?\n\n[Ajoutez vos détails ici]\n\nMerci,\n${mockPatientData.prénom}`);
+      setEscalationMessage(`Bonjour, j'ai demandé au chatbot : "${originalQuestion}". ${botReason ? `Il m'a été suggéré de vous contacter car: "${botReason}". ` : ''} Pourriez-vous m'éclairer ?\n\n[Ajoutez vos détails ici]\n\nMerci,\n${mockPatientData.prénom}`);
    };
 
    const handleCancelEscalation = () => {
@@ -226,69 +237,72 @@ export default function PatientChatbotPopup() {
 
   return (
     <>
-       {/* Button to open the chatbot popup */}
+       {/* Updated Button to open the chatbot popup */}
        <Button
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 z-50 rounded-full p-4 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
+            className="fixed bottom-6 right-6 z-50 rounded-full py-3 px-4 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground flex items-center gap-2 h-auto text-base" // Increased size and added flex properties
             aria-label="Ouvrir l'assistance patient"
        >
-           <MessageSquarePlus className="w-6 h-6" />
+           <MessageSquarePlus className="w-5 h-5" /> {/* Slightly smaller icon */}
+           <span>Une question ?</span> {/* Added text */}
        </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[450px] p-0 flex flex-col max-h-[80vh]">
-          <DialogHeader className="p-4 border-b">
-            <DialogTitle>Assistance Patient</DialogTitle>
-            <DialogDescription>
-              Posez vos questions ici. Si je ne peux pas répondre, je vous proposerai de contacter votre kiné.
-            </DialogDescription>
+        <DialogContent className="sm:max-w-[450px] p-0 flex flex-col max-h-[80vh] shadow-xl border">
+          <DialogHeader className="p-4 border-b bg-muted/30 flex flex-row items-center gap-3">
+             <Avatar className="w-10 h-10 border-2 border-primary bg-primary/20 text-primary flex-shrink-0">
+                 <AvatarFallback><Sparkles className="w-5 h-5" /></AvatarFallback> {/* Kine-Bot Icon */}
+             </Avatar>
+             <div>
+                <DialogTitle className="text-lg">Assistant Kiné Virtuel</DialogTitle>
+                <DialogDescription className="text-sm">
+                   Posez vos questions ici. Je vous aiderai si possible.
+                </DialogDescription>
+             </div>
           </DialogHeader>
 
-           <ScrollArea className="flex-grow overflow-y-auto p-4 bg-muted/20" ref={scrollAreaRef}>
+           <ScrollArea className="flex-grow overflow-y-auto p-4 bg-muted/10" ref={scrollAreaRef}>
              <div className="space-y-4 ">
-               {messages.length === 0 && !isEscalating && (
-                  <p className="text-center text-muted-foreground text-sm py-10">Posez une question pour commencer...</p>
-               )}
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex items-start gap-3 ${
-                    message.sender === 'user' ? 'justify-end' : ''
-                  } ${message.sender === 'system' ? 'justify-center' : ''}`}
+                  className={`flex items-end gap-2.5 ${ // Changed items-start to items-end, gap-3 to 2.5
+                    message.sender === 'user' ? 'justify-end' : 'justify-start' // Simplified justification
+                  } ${message.sender === 'system' ? '!justify-center' : ''}`} // Keep system messages centered
                 >
                   {message.sender === 'bot' && (
-                     <Avatar className="w-8 h-8 border bg-primary text-primary-foreground flex-shrink-0">
-                      <AvatarFallback><Bot className="w-4 h-4" /></AvatarFallback>
+                     <Avatar className="w-8 h-8 border bg-primary text-primary-foreground flex-shrink-0 mb-1"> {/* Added mb-1 */}
+                      <AvatarFallback><Bot className="w-4 h-4" /></AvatarFallback> {/* Standard Bot icon */}
                     </Avatar>
                   )}
                    {message.sender === 'system' && !message.requiresEscalation && (
-                      <div className="text-xs text-center text-muted-foreground italic px-4 py-1 my-2 max-w-[90%]">
+                      <div className="text-xs text-center text-muted-foreground italic px-4 py-1 my-2 max-w-[90%] rounded-md bg-background border border-dashed">
                         {message.text}
                       </div>
                    )}
                    {message.sender !== 'system' || message.requiresEscalation ? (
                      <div
-                        className={`rounded-lg p-3 max-w-[80%] text-sm shadow-sm ${
+                        className={`rounded-lg p-3 max-w-[80%] text-sm shadow-sm break-words ${ // Added break-words
                         message.sender === 'user'
-                            ? 'bg-primary text-primary-foreground'
+                            ? 'bg-primary text-primary-foreground rounded-br-none' // User bubble styling
                             : message.sender === 'bot'
-                            ? 'bg-background border' // Changed bot background
-                            : 'bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-900/30 dark:text-amber-100 dark:border-amber-700' // System escalation message style
+                            ? 'bg-background border rounded-bl-none' // Bot bubble styling
+                            : 'bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-900/30 dark:text-amber-100 dark:border-amber-700 w-full text-center' // System escalation message style
                         }`}
                      >
                       {message.sender === 'system' && message.requiresEscalation && (
-                          <div className="flex items-center gap-2 mb-2 font-medium text-xs">
+                          <div className="flex items-center justify-center gap-2 mb-2 font-medium text-xs">
                               <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                               <span>Action requise</span>
                           </div>
                       )}
                       {message.text}
                        {message.sender === 'system' && message.requiresEscalation && (
-                           <div className="mt-3 pt-2 border-t border-amber-300 dark:border-amber-700/50">
+                           <div className="mt-3 pt-2 border-t border-amber-300/50 dark:border-amber-700/50 flex justify-center">
                                <Button
                                    size="sm"
                                    variant="outline"
-                                   className="text-xs h-7 border-amber-400 hover:bg-amber-200 dark:border-amber-600 dark:hover:bg-amber-800"
+                                   className="text-xs h-7 border-amber-400 hover:bg-amber-200 dark:border-amber-600 dark:hover:bg-amber-800/50 text-amber-900 dark:text-amber-100" // Adjusted colors
                                    onClick={() => handleStartEscalation(lastUserQuestion, message.escalationReason)}
                                >
                                    <Send className="w-3 h-3 mr-1.5"/> Envoyer au Kiné
@@ -298,18 +312,18 @@ export default function PatientChatbotPopup() {
                     </div>
                    ) : null}
                    {message.sender === 'user' && (
-                      <Avatar className="w-8 h-8 border flex-shrink-0">
+                      <Avatar className="w-8 h-8 border bg-muted flex-shrink-0 mb-1"> {/* Added mb-1 */}
                        <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
                      </Avatar>
                    )}
                 </div>
               ))}
               {isLoading && !isEscalating && ( // Show bot typing indicator only when not escalating
-                <div className="flex items-start gap-3">
-                   <Avatar className="w-8 h-8 border bg-primary text-primary-foreground flex-shrink-0">
+                <div className="flex items-end gap-2.5 justify-start">
+                   <Avatar className="w-8 h-8 border bg-primary text-primary-foreground flex-shrink-0 mb-1">
                        <AvatarFallback><Bot className="w-4 h-4" /></AvatarFallback>
                    </Avatar>
-                   <div className="rounded-lg p-3 bg-background border shadow-sm">
+                   <div className="rounded-lg p-3 bg-background border shadow-sm rounded-bl-none">
                       <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                    </div>
                 </div>
@@ -319,28 +333,29 @@ export default function PatientChatbotPopup() {
 
 
           {isEscalating ? (
-              <div className="p-4 border-t">
-                  <p className="text-sm font-medium mb-2 text-foreground">Envoyer un message à votre kiné :</p>
+              <div className="p-4 border-t bg-muted/30">
+                  <p className="text-sm font-medium mb-2 text-foreground">Transférer à votre kiné :</p>
                   <Textarea
-                      placeholder="Votre message..."
+                      placeholder="Ajoutez des détails si nécessaire..."
                       value={escalationMessage}
                       onChange={(e) => setEscalationMessage(e.target.value)}
                       rows={5}
-                      className="mb-2 text-sm"
+                      className="mb-2 text-sm bg-background" // Added bg-background
                       disabled={isLoading}
+                      aria-label="Message à envoyer au kiné"
                   />
                   <div className="flex justify-end gap-2">
                        <Button variant="outline" size="sm" onClick={handleCancelEscalation} disabled={isLoading}>
                            Annuler
                        </Button>
-                       <Button size="sm" onClick={handleSendEscalationMessage} disabled={isLoading || !escalationMessage.trim()}>
+                       <Button size="sm" onClick={handleSendEscalationMessage} disabled={isLoading || !escalationMessage.trim()} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                            Envoyer
                        </Button>
                   </div>
               </div>
           ) : (
-              <DialogFooter className="p-4 border-t ">
+              <DialogFooter className="p-4 border-t bg-muted/30">
                  <div className="flex gap-2 w-full items-center">
                   <Input
                     ref={inputRef}
@@ -351,9 +366,9 @@ export default function PatientChatbotPopup() {
                     onKeyPress={handleKeyPress}
                     disabled={isLoading || isEscalating}
                     aria-label="Entrez votre question pour le chatbot"
-                    className="flex-grow"
+                    className="flex-grow bg-background" // Added bg-background
                   />
-                  <Button onClick={handleSendMessage} disabled={isLoading || !inputValue.trim() || isEscalating} size="icon" aria-label="Envoyer le message">
+                  <Button onClick={handleSendMessage} disabled={isLoading || !inputValue.trim() || isEscalating} size="icon" aria-label="Envoyer le message" className="bg-primary hover:bg-primary/90 text-primary-foreground">
                     {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CornerDownLeft className="h-4 w-4" />}
                   </Button>
                  </div>
