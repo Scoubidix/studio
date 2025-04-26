@@ -1,8 +1,9 @@
+
 'use client';
 
 import type { CertificationBadge } from '@/interfaces';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Award } from 'lucide-react';
+import { Award, Star } from 'lucide-react'; // Added Star for points
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -16,12 +17,20 @@ import {
 
 interface KineCertificationManagerProps {
   certifications: CertificationBadge[];
+  title?: string;
+  description?: string;
+  showPoints?: boolean; // Option to show points required
 }
 
 // TODO: Implement logic to award badges based on Kine's activity within the app
 // (e.g., number of patients managed, programs created, blog posts written, etc.)
 
-export default function KineCertificationManager({ certifications }: KineCertificationManagerProps) {
+export default function KineCertificationManager({
+    certifications,
+    title = "Mes Certifications & Badges",
+    description = "Vos badges de compétence et certifications obtenus grâce à votre activité et vos formations. Ils sont visibles par vos patients.",
+    showPoints = false // Default to not showing points in this standalone component
+}: KineCertificationManagerProps) {
 
   // Function to simulate checking and awarding new badges (replace with actual logic)
   const checkAndAwardBadges = () => {
@@ -42,11 +51,9 @@ export default function KineCertificationManager({ certifications }: KineCertifi
     <Card className="shadow-md">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Award className="w-5 h-5 text-primary" /> Mes Certifications & Badges
+          <Award className="w-5 h-5 text-primary" /> {title}
         </CardTitle>
-        <CardDescription>
-          Vos badges de compétence et certifications obtenus grâce à votre activité et vos formations. Ils sont visibles par vos patients.
-        </CardDescription>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         {certifications.length > 0 ? (
@@ -55,15 +62,24 @@ export default function KineCertificationManager({ certifications }: KineCertifi
                 {certifications.map((cert) => (
                   <Tooltip key={cert.id}>
                       <TooltipTrigger asChild>
-                         <Card className="p-4 border border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/30 w-fit cursor-default">
-                            <div className="flex items-center gap-2">
-                                <Award className="w-6 h-6 text-green-600 dark:text-green-400" />
+                         {/* Updated Card styling for badges */}
+                         <Badge
+                           variant="outline"
+                           className="border-green-400 bg-green-50 dark:border-green-700 dark:bg-green-900/30 h-auto py-1.5 px-3 cursor-default"
+                         >
+                           <div className="flex items-center gap-2">
+                                <Award className="w-5 h-5 text-green-600 dark:text-green-400" />
                                 <div>
                                     <h4 className="font-semibold text-sm text-green-800 dark:text-green-200">{cert.name}</h4>
                                     <p className="text-xs text-green-700 dark:text-green-300">Obtenu le {format(new Date(cert.dateAwarded), "d MMM yyyy", { locale: fr })}</p>
+                                     {showPoints && cert.pointsRequired && (
+                                         <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1 mt-0.5">
+                                             <Star className="w-3 h-3"/> {cert.pointsRequired} pts requis
+                                         </p>
+                                     )}
                                 </div>
                             </div>
-                         </Card>
+                         </Badge>
                       </TooltipTrigger>
                       <TooltipContent side="bottom" className="max-w-xs text-center">
                          <p className="text-xs">{cert.description}</p>

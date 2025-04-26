@@ -1,4 +1,5 @@
 
+
 // @refresh reset - Prevent error during compilation
 'use client';
 
@@ -21,18 +22,39 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import type { Patient, Kine, Feedback, MessageToKine, ShopProgram, BlogPost, RehabProtocol, CertificationBadge } from '@/interfaces';
 import { mockFeedbacks } from '@/components/kine/mock-data';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Layers, Award, ChevronDown, ChevronUp, Bot } from 'lucide-react'; // Import new icons
+import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Layers, Award, ChevronDown, ChevronUp, Bot, Share2, Star, Trophy } from 'lucide-react'; // Import new icons
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import KineCertificationDisplay from '@/components/patient/kine-certification-display'; // Import display component (can reuse)
 
 // --- Mock Data (Initial Data - now managed by state) ---
 const initialMockKine: Kine = {
     id: 'kineTest1', nom: 'Leroy', prénom: 'Sophie', email: 'sophie.leroy@kine.fr', spécialité: 'Sport',
-    certifications: [ // Add mock certifications
-        { id: 'cert1', name: 'Expert Rééducation Épaule', description: 'Formation avancée sur la rééducation de l\'épaule.', dateAwarded: '2023-05-15T00:00:00.000Z', icon: 'Award' },
-        { id: 'cert2', name: 'Spécialiste Course à Pied', description: 'Certification en biomécanique et prévention des blessures du coureur.', dateAwarded: '2024-01-20T00:00:00.000Z', icon: 'Award' },
+    progressPoints: 850, // Add mock points for Kine
+    certifications: [ // Add mock certifications with pointsRequired
+        { id: 'cert1', name: 'Expert Rééducation Épaule', description: 'Formation avancée sur la rééducation de l\'épaule.', dateAwarded: '2023-05-15T00:00:00.000Z', icon: 'Award', pointsRequired: 1000 },
+        { id: 'cert2', name: 'Spécialiste Course à Pied', description: 'Certification en biomécanique et prévention des blessures du coureur.', dateAwarded: '2024-01-20T00:00:00.000Z', icon: 'Award', pointsRequired: 2500 },
+        { id: 'cert3', name: 'Contributeur Blog Pro', description: 'A rédigé des articles pour le blog professionnel.', dateAwarded: '2024-07-10T00:00:00.000Z', icon: 'Award', pointsRequired: 500 }, // Example activity badge
     ]
 };
+
+// Mock next badge threshold (find the lowest points required for an unearned badge)
+const findNextBadge = (kine: Kine | null): CertificationBadge | null => {
+    if (!kine || !kine.certifications) return null;
+    const earnedIds = kine.certifications.map(c => c.id);
+    const unearnedBadges = mockAvailableBadges.filter(b => !earnedIds.includes(b.id) && b.pointsRequired);
+    if (unearnedBadges.length === 0) return null;
+    unearnedBadges.sort((a, b) => (a.pointsRequired || Infinity) - (b.pointsRequired || Infinity));
+    return unearnedBadges[0];
+}
+
+// Assume a list of all possible badges exists somewhere
+const mockAvailableBadges: CertificationBadge[] = [
+    ...(initialMockKine.certifications || []), // Include earned ones
+    { id: 'cert4', name: 'Créateur Marketplace', description: 'A publié son premier programme sur la marketplace.', dateAwarded: '', pointsRequired: 1500 },
+    { id: 'cert5', name: 'Mentor Patient', description: 'A suivi plus de 10 patients actifs simultanément.', dateAwarded: '', pointsRequired: 3000 },
+];
+
 
 const initialMockPatients: Patient[] = [
     { id: 'patientTest', nom: 'Dupont', prénom: 'Jean', email: 'jean.dupont@email.com', date_naissance: '1985-03-15', pathologies: ['Lombalgie chronique', 'Tendinopathie épaule droite'], remarques: 'Motivé mais craint la douleur.', kine_id: 'kineTest1', objectifs: ['Amélioration de la mobilité lombaire', 'Reprise progressive de la course à pied'], subscriptionEndDate: new Date(Date.now() + 86400000 * 10).toISOString(), subscriptionStatus: 'active' },
@@ -83,6 +105,10 @@ export default function KineDashboard() {
   const [rehabProtocols] = useState<RehabProtocol[]>(mockRehabProtocols); // Assuming protocols are read-only for now
   const [certifications, setCertifications] = useState<CertificationBadge[]>(initialMockKine.certifications || []);
 
+  // Gamification state
+  const [currentPoints, setCurrentPoints] = useState(initialMockKine.progressPoints || 0);
+  const [nextBadge, setNextBadge] = useState<CertificationBadge | null>(null);
+
 
   useEffect(() => {
     const today = new Date();
@@ -106,6 +132,13 @@ export default function KineDashboard() {
       setIsNotificationsOpen(highPainFeedback.length > 0 || unreadMessages.length > 0);
   }, [kineData, patients]); // Depend on patients to update notifications when a new patient is added
 
+   // Update next badge when kineData changes
+  useEffect(() => {
+      setNextBadge(findNextBadge(kineData));
+      setCurrentPoints(kineData?.progressPoints || 0);
+      setCertifications(kineData?.certifications || []);
+  }, [kineData]);
+
   const handlePatientSelect = (patientId: string) => setSelectedPatientId(patientId);
 
   const handleMarkMessageAsRead = (messageId: string) => {
@@ -128,6 +161,12 @@ export default function KineDashboard() {
       setPatients(prevPatients => [...prevPatients, newPatient]);
       setIsAddPatientModalOpen(false);
       setSelectedPatientId(newPatient.id);
+      // Simulate earning points for adding a patient
+      if (kineData) {
+          const pointsEarned = 20;
+          setKineData(prev => prev ? ({ ...prev, progressPoints: (prev.progressPoints || 0) + pointsEarned }) : prev);
+          toast({ title: "Activité enregistrée !", description: `Vous avez gagné ${pointsEarned} points pour l'ajout d'un patient.` });
+      }
   };
 
   // --- Handlers for new Kine features (Simulated) ---
@@ -141,6 +180,12 @@ export default function KineDashboard() {
             updated[index] = program;
             return updated;
         }
+        // Simulate earning points for creating a program
+         if (kineData) {
+             const pointsEarned = 50;
+             setKineData(prev => prev ? ({ ...prev, progressPoints: (prev.progressPoints || 0) + pointsEarned }) : prev);
+             toast({ title: "Activité enregistrée !", description: `Vous avez gagné ${pointsEarned} points pour la création d'un programme.` });
+         }
         return [...prev, { ...program, id: `shopProg${prev.length + 1}` }]; // Add with new mock ID
     });
     toast({ title: "Programme sauvegardé (Simulation)" });
@@ -151,8 +196,27 @@ export default function KineDashboard() {
     setShopPrograms(prev => prev.filter(p => p.id !== programId));
     toast({ title: "Programme supprimé (Simulation)", variant: "destructive" });
   };
-
   // --- End Handlers ---
+
+  // --- Share Kine Progress ---
+  const handleShareKineProgress = () => {
+    if (!kineData) return;
+    const text = `J'ai atteint ${kineData.progressPoints || 0} points et obtenu ${kineData.certifications?.length || 0} badges sur Mon Assistant Kiné !`;
+    const url = window.location.href; // Or a specific profile URL
+    if (navigator.share) {
+      navigator.share({ title: 'Ma Progression sur Mon Assistant Kiné', text, url })
+        .then(() => toast({ title: "Partagé !" }))
+        .catch((error) => {
+            console.error('Error sharing:', error);
+            navigator.clipboard.writeText(`${text} - ${url}`);
+            toast({ title: "Lien copié !", description: "Le lien de votre progression a été copié." });
+        });
+    } else {
+      navigator.clipboard.writeText(`${text} - ${url}`);
+      toast({ title: "Lien copié !", description: "Le lien de votre progression a été copié." });
+    }
+  };
+  // --- End Share Kine Progress ---
 
 
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
@@ -161,14 +225,50 @@ export default function KineDashboard() {
 
   return (
     <div className="space-y-8">
-        {/* Date and Subscription Reminders Header */}
+        {/* Date, Gamification, and Subscription Reminders Header */}
         <div className="flex flex-col md:flex-row justify-between md:items-start gap-4 mb-6 p-4 bg-card rounded-lg shadow-sm border">
-            <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
-                <CalendarDays className="w-5 h-5 text-primary"/>
-                <span className="capitalize">{currentDate}</span>
+            {/* Left Side: Date & Gamification */}
+            <div className="space-y-3">
+                {/* Date */}
+                <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                    <CalendarDays className="w-5 h-5 text-primary"/>
+                    <span className="capitalize">{currentDate}</span>
+                </div>
+                {/* Kine Gamification */}
+                {kineData && (
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                             <Star className="w-5 h-5 text-yellow-500" />
+                             <span className="font-semibold text-foreground">{currentPoints} points</span>
+                        </div>
+                         {nextBadge && nextBadge.pointsRequired && (
+                            <div className="flex items-center gap-1.5 text-xs">
+                                <Trophy className="w-4 h-4 text-indigo-500" />
+                                <span>{nextBadge.pointsRequired - currentPoints} pts pour "{nextBadge.name}"</span>
+                            </div>
+                         )}
+                         <Button
+                             variant="outline"
+                             size="xs"
+                             onClick={handleShareKineProgress}
+                             className="flex items-center gap-1.5 h-6 px-2 text-xs"
+                             aria-label="Partager ma progression kiné"
+                           >
+                            <Share2 className="w-3.5 h-3.5" />
+                            Partager
+                         </Button>
+                    </div>
+                )}
+                 {/* Kine Certifications Display - Reusing patient component for brevity */}
+                 {certifications.length > 0 && (
+                     <KineCertificationDisplay certifications={certifications} kineName={`${kineData?.prénom} ${kineData?.nom}`} />
+                 )}
+
             </div>
+
+            {/* Right Side: Expiring Subscriptions */}
             {expiringSubscriptions.length > 0 && (
-                <div className="w-full md:w-auto md:max-w-md lg:max-w-lg">
+                <div className="w-full md:w-auto md:max-w-md lg:max-w-lg mt-4 md:mt-0">
                     <Alert variant="default" className="border-yellow-400 bg-yellow-50 dark:bg-yellow-900/30 dark:border-yellow-700">
                         <BellRing className="h-4 w-4 !text-yellow-600 dark:!text-yellow-400 !left-3 !top-3.5" />
                         <AlertTitle className="ml-6 text-sm font-semibold text-yellow-800 dark:text-yellow-200">Abonnements à renouveler</AlertTitle>
@@ -235,7 +335,7 @@ export default function KineDashboard() {
             <TabsTrigger value="marketplace"><Store className="w-4 h-4 mr-2"/>Marketplace</TabsTrigger>
             <TabsTrigger value="blog"><BookOpen className="w-4 h-4 mr-2"/>Blog Pro</TabsTrigger>
             <TabsTrigger value="templates"><Layers className="w-4 h-4 mr-2"/>Protocoles</TabsTrigger>
-            <TabsTrigger value="certifications"><Award className="w-4 h-4 mr-2"/>Certifications</TabsTrigger>
+            <TabsTrigger value="certifications"><Award className="w-4 h-4 mr-2"/>Badges Pro</TabsTrigger> {/* Renamed for clarity */}
         </TabsList>
 
         {/* Patient Management Tab */}
@@ -326,7 +426,13 @@ export default function KineDashboard() {
 
          {/* Certifications Tab */}
         <TabsContent value="certifications">
-            <KineCertificationManager certifications={certifications} />
+             {/* Use the updated component to show points */}
+            <KineCertificationManager
+                certifications={certifications}
+                title="Mes Badges Professionnels"
+                description="Visualisez vos badges de compétence et de formation. Ils sont visibles par vos patients."
+                showPoints={true} // Show points required for badges in this view
+            />
         </TabsContent>
 
       </Tabs>

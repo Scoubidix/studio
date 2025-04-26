@@ -1,4 +1,5 @@
 
+
 export interface Exercise {
   id: string;
   nom: string;
@@ -71,6 +72,7 @@ export interface Kine {
     email: string;
     spécialité: string;
     certifications?: CertificationBadge[]; // Kine certifications/badges
+    progressPoints?: number; // For gamification (e.g., based on activity)
 }
 
 export interface BlogPost {
@@ -124,6 +126,7 @@ export interface CertificationBadge {
     description: string;
     icon?: string; // Icon name (e.g., from lucide-react) or URL
     dateAwarded: string; // ISO date string
+    pointsRequired?: number; // Points needed to achieve this badge (optional)
 }
 
 // For patient progress tests
