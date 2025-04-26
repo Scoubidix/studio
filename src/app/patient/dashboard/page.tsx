@@ -9,9 +9,10 @@ import FeedbackForm from '@/components/patient/feedback-form';
 import PatientChatbotPopup from '@/components/patient/patient-chatbot'; // Import the new popup component
 import ExerciseDetailModal from '@/components/patient/exercise-detail-modal'; // Import the new detail modal
 import Image from 'next/image';
-import { Dumbbell, Activity, StretchVertical, Trophy, CalendarDays, ArrowRight, Target } from 'lucide-react'; // Added Target icon
+import { Dumbbell, Activity, StretchVertical, Trophy, CalendarDays, ArrowRight, Target, Share2 } from 'lucide-react'; // Added Target and Share2 icons
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale'; // Import French locale
+import { useToast } from '@/hooks/use-toast'; // Import useToast
 
 // --- Mock Data (Replace with actual data fetching later) ---
 const mockExercises: Exercise[] = [
@@ -136,6 +137,7 @@ export default function PatientDashboard() {
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [patientGoals, setPatientGoals] = useState<string[]>([]); // State for goals
+  const { toast } = useToast(); // Initialize toast
 
   // Set date, initial quote, and patient goals on mount
   useEffect(() => {
@@ -169,12 +171,35 @@ export default function PatientDashboard() {
     setIsDetailModalOpen(true);
   };
 
+  const handleShareClick = () => {
+    // Basic share functionality (e.g., copy link or open native share)
+    if (navigator.share) {
+      navigator.share({
+        title: 'Mon Assistant Kiné Progrès',
+        text: `J'ai complété ${totalSessions} séances avec Mon Assistant Kiné ! Objectif : ${patientGoals.join(', ')}`,
+        url: window.location.href, // Share the current dashboard URL
+      }).then(() => {
+        toast({ title: "Partagé !", description: "Votre progression a été partagée." });
+      }).catch((error) => {
+        console.error('Error sharing:', error);
+        // Fallback for browsers without navigator.share or if user cancels
+        navigator.clipboard.writeText(`J'ai complété ${totalSessions} séances avec Mon Assistant Kiné ! Objectif : ${patientGoals.join(', ')} - ${window.location.href}`);
+        toast({ title: "Lien copié !", description: "Le lien vers votre tableau de bord a été copié dans le presse-papiers." });
+      });
+    } else {
+      // Fallback for browsers without navigator.share
+      navigator.clipboard.writeText(`J'ai complété ${totalSessions} séances avec Mon Assistant Kiné ! Objectif : ${patientGoals.join(', ')} - ${window.location.href}`);
+      toast({ title: "Lien copié !", description: "Le lien vers votre tableau de bord a été copié dans le presse-papiers." });
+    }
+  };
+
+
   // TODO: Replace with actual data fetching logic for program, exercises, feedback history
 
   return (
     <div className="space-y-8">
        {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6 p-4 bg-card rounded-lg shadow-sm border">
+      <div className="flex flex-col md:flex-row justify-between md:items-start gap-4 mb-6 p-4 bg-card rounded-lg shadow-sm border">
            {/* Left Side: Date, Quote, Goals */}
            <div className="space-y-2">
                <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
@@ -194,14 +219,28 @@ export default function PatientDashboard() {
                )}
            </div>
 
-           {/* Right Side: Gamification */}
-            <div className="text-right flex-shrink-0">
-                 <div className="flex items-center gap-2 justify-end">
-                    <Trophy className="w-5 h-5 text-yellow-500" />
-                    <span className="font-semibold">{sessionStreak}</span>
-                    <span className="text-sm text-muted-foreground">jours de suite</span>
+           {/* Right Side: Gamification & Sharing */}
+            <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                 {/* Gamification */}
+                 <div className="text-right">
+                     <div className="flex items-center gap-2 justify-end">
+                        <Trophy className="w-5 h-5 text-yellow-500" />
+                        <span className="font-semibold">{sessionStreak}</span>
+                        <span className="text-sm text-muted-foreground">jours de suite</span>
+                     </div>
+                     <p className="text-xs text-muted-foreground mt-1">{totalSessions} séances complétées au total</p>
                  </div>
-                 <p className="text-xs text-muted-foreground mt-1">{totalSessions} séances complétées au total</p>
+                 {/* Sharing Button */}
+                  <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={handleShareClick}
+                     className="flex items-center gap-1.5 h-8 text-xs"
+                     aria-label="Partager ma progression"
+                   >
+                    <Share2 className="w-3.5 h-3.5" />
+                    Partager
+                  </Button>
             </div>
       </div>
 
