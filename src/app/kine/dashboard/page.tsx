@@ -3,221 +3,179 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert components
-import { Button } from '@/components/ui/button'; // Import Button
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Import Tabs
 import PatientSelector from '@/components/kine/patient-selector';
 import PatientInfoForm from '@/components/kine/patient-info-form';
 import PatientFeedbackDisplay from '@/components/kine/patient-feedback-display';
 import NotificationArea from '@/components/kine/notification-area';
-import AddPatientModal from '@/components/kine/add-patient-modal'; // Import AddPatientModal
+import AddPatientModal from '@/components/kine/add-patient-modal';
+import MarketplaceManager from '@/components/kine/marketplace-manager'; // Import new component
+import BlogManager from '@/components/kine/blog-manager'; // Import new component
+import TemplateBrowser from '@/components/kine/template-browser'; // Import new component
+import KineCertificationManager from '@/components/kine/kine-certification-manager'; // Import new component
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import type { Patient, Kine, Feedback, MessageToKine } from '@/interfaces';
-import { mockFeedbacks } from '@/components/kine/mock-data'; // Import shared mock feedbacks
-import { useToast } from '@/hooks/use-toast'; // Import useToast for add patient confirmation
-import { PlusCircle, CalendarDays, BellRing, UserCheck } from 'lucide-react'; // Import icons
-import { format, differenceInDays, parseISO, isBefore } from 'date-fns'; // Import date-fns functions
-import { fr } from 'date-fns/locale'; // Import French locale
+import type { Patient, Kine, Feedback, MessageToKine, ShopProgram, BlogPost, RehabProtocol, CertificationBadge } from '@/interfaces';
+import { mockFeedbacks } from '@/components/kine/mock-data';
+import { useToast } from '@/hooks/use-toast';
+import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Layers, Award } from 'lucide-react'; // Import new icons
+import { format, differenceInDays, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 // --- Mock Data (Initial Data - now managed by state) ---
 const initialMockKine: Kine = {
-    id: 'kineTest1',
-    nom: 'Leroy',
-    prénom: 'Sophie',
-    email: 'sophie.leroy@kine.fr',
-    spécialité: 'Sport',
+    id: 'kineTest1', nom: 'Leroy', prénom: 'Sophie', email: 'sophie.leroy@kine.fr', spécialité: 'Sport',
+    certifications: [ // Add mock certifications
+        { id: 'cert1', name: 'Expert Rééducation Épaule', description: 'Formation avancée sur la rééducation de l\'épaule.', dateAwarded: '2023-05-15T00:00:00.000Z', icon: 'Award' },
+        { id: 'cert2', name: 'Spécialiste Course à Pied', description: 'Certification en biomécanique et prévention des blessures du coureur.', dateAwarded: '2024-01-20T00:00:00.000Z', icon: 'Award' },
+    ]
 };
 
-// Add subscription info to mock patients
 const initialMockPatients: Patient[] = [
-    {
-        id: 'patientTest',
-        nom: 'Dupont',
-        prénom: 'Jean',
-        email: 'jean.dupont@email.com', // Added email
-        date_naissance: '1985-03-15',
-        pathologies: ['Lombalgie chronique', 'Tendinopathie épaule droite'],
-        remarques: 'Motivé mais craint la douleur.',
-        kine_id: 'kineTest1',
-        objectifs: ['Amélioration de la mobilité lombaire', 'Reprise progressive de la course à pied'],
-        subscriptionEndDate: new Date(Date.now() + 86400000 * 10).toISOString(), // Ends in 10 days
-        subscriptionStatus: 'active',
-    },
-    {
-        id: 'patientTest2',
-        nom: 'Martin',
-        prénom: 'Claire',
-        email: 'claire.martin@email.com', // Added email
-        date_naissance: '1992-07-22',
-        pathologies: ['Entorse cheville gauche (récente)'],
-        remarques: 'Sportive (Volley), veut reprendre rapidement.',
-        kine_id: 'kineTest1',
-        objectifs: ['Récupération complète mobilité cheville', 'Renforcement musculaire préventif'],
-        subscriptionEndDate: new Date(Date.now() + 86400000 * 5).toISOString(), // Ends in 5 days
-        subscriptionStatus: 'active',
-    },
-     {
-        id: 'patientTest3',
-        nom: 'Petit',
-        prénom: 'Lucas',
-        email: 'lucas.petit@email.com', // Added email
-        date_naissance: '2005-11-10',
-        pathologies: ['Syndrome rotulien genou droit'],
-        remarques: 'Jeune footballeur, en pleine croissance.',
-        kine_id: 'kineTest1',
-        objectifs: ['Diminution douleur pendant effort', 'Correction posture/gestuelle'],
-        subscriptionEndDate: new Date(Date.now() - 86400000 * 2).toISOString(), // Ended 2 days ago
-        subscriptionStatus: 'expired',
-    },
-     {
-        id: 'patientTest4', // New patient
-        nom: 'Dubois',
-        prénom: 'Marie',
-        email: 'marie.dubois@email.com',
-        date_naissance: '1978-12-01',
-        pathologies: ['Arthrose cervicale'],
-        remarques: 'Sédentaire, cherche à soulager les douleurs.',
-        kine_id: 'kineTest1',
-        objectifs: ['Augmenter la mobilité cervicale', 'Réduire les céphalées de tension'],
-        subscriptionEndDate: new Date(Date.now() + 86400000 * 45).toISOString(), // Ends in 45 days
-        subscriptionStatus: 'active',
-    },
+    { id: 'patientTest', nom: 'Dupont', prénom: 'Jean', email: 'jean.dupont@email.com', date_naissance: '1985-03-15', pathologies: ['Lombalgie chronique', 'Tendinopathie épaule droite'], remarques: 'Motivé mais craint la douleur.', kine_id: 'kineTest1', objectifs: ['Amélioration de la mobilité lombaire', 'Reprise progressive de la course à pied'], subscriptionEndDate: new Date(Date.now() + 86400000 * 10).toISOString(), subscriptionStatus: 'active' },
+    { id: 'patientTest2', nom: 'Martin', prénom: 'Claire', email: 'claire.martin@email.com', date_naissance: '1992-07-22', pathologies: ['Entorse cheville gauche (récente)'], remarques: 'Sportive (Volley), veut reprendre rapidement.', kine_id: 'kineTest1', objectifs: ['Récupération complète mobilité cheville', 'Renforcement musculaire préventif'], subscriptionEndDate: new Date(Date.now() + 86400000 * 5).toISOString(), subscriptionStatus: 'active' },
+    { id: 'patientTest3', nom: 'Petit', prénom: 'Lucas', email: 'lucas.petit@email.com', date_naissance: '2005-11-10', pathologies: ['Syndrome rotulien genou droit'], remarques: 'Jeune footballeur, en pleine croissance.', kine_id: 'kineTest1', objectifs: ['Diminution douleur pendant effort', 'Correction posture/gestuelle'], subscriptionEndDate: new Date(Date.now() - 86400000 * 2).toISOString(), subscriptionStatus: 'expired' },
+    { id: 'patientTest4', nom: 'Dubois', prénom: 'Marie', email: 'marie.dubois@email.com', date_naissance: '1978-12-01', pathologies: ['Arthrose cervicale'], remarques: 'Sédentaire, cherche à soulager les douleurs.', kine_id: 'kineTest1', objectifs: ['Augmenter la mobilité cervicale', 'Réduire les céphalées de tension'], subscriptionEndDate: new Date(Date.now() + 86400000 * 45).toISOString(), subscriptionStatus: 'active' },
 ];
 
-// Mock Messages to Kiné (escalated from chatbot)
 const mockMessages: MessageToKine[] = [
-    {
-        id: 'msg1',
-        patient_id: 'patientTest',
-        timestamp: new Date(Date.now() - 3600000 * 2).toISOString(), // 2 hours ago
-        original_question: "Mon genou craque beaucoup pendant les squats, est-ce normal ?",
-        message: "Bonjour, j'ai demandé au chatbot : \"Mon genou craque beaucoup pendant les squats, est-ce normal ?\". Il m'a été suggéré de vous contacter car: \"Je ne peux pas évaluer les bruits articulaires spécifiques.\". Pourriez-vous m'éclairer ? Merci, Jean",
-        status: 'unread',
-    },
-    {
-        id: 'msg2',
-        patient_id: 'patientTest3',
-        timestamp: new Date(Date.now() - 86400000 * 1).toISOString(), // Yesterday
-        original_question: "Puis-je remplacer l'exercice X par l'exercice Y ?",
-        message: "Bonjour, j'ai demandé au chatbot si je pouvais remplacer un exercice. Il m'a dit de voir avec vous. Est-ce possible ? Merci, Lucas",
-        status: 'unread',
-    },
-    {
-        id: 'msg3', // Already read message
-        patient_id: 'patientTest2',
-        timestamp: new Date(Date.now() - 86400000 * 4).toISOString(), // 4 days ago
-        original_question: "Où acheter un bon tapis de sol ?",
-        message: "Bonjour, le chatbot ne savait pas où acheter un tapis. Avez-vous une recommandation? Merci, Claire",
-        status: 'read',
-    }
+    { id: 'msg1', patient_id: 'patientTest', timestamp: new Date(Date.now() - 3600000 * 2).toISOString(), original_question: "Mon genou craque beaucoup pendant les squats, est-ce normal ?", message: "Bonjour, j'ai demandé au chatbot ...", status: 'unread' },
+    { id: 'msg2', patient_id: 'patientTest3', timestamp: new Date(Date.now() - 86400000 * 1).toISOString(), original_question: "Puis-je remplacer l'exercice X par l'exercice Y ?", message: "Bonjour, j'ai demandé au chatbot ...", status: 'unread' },
+    { id: 'msg3', patient_id: 'patientTest2', timestamp: new Date(Date.now() - 86400000 * 4).toISOString(), original_question: "Où acheter un bon tapis de sol ?", message: "Bonjour, le chatbot ne savait pas...", status: 'read' }
+];
+
+// Mock data for new Kine features
+const mockKineShopPrograms: ShopProgram[] = [
+    { id: 'shopProg2', kine_id: 'kineTest1', title: 'Programme Anti-Mal de Dos (Bureau)', description: 'Exercices simples pour soulager les tensions...', targetAudience: 'Travailleurs de bureau', price: 19.99, currency: 'EUR', exerciseList: [], tags: ['dos', 'bureau'], imageUrl: 'https://picsum.photos/seed/desk/300/150' },
+];
+const mockKineBlogPosts: BlogPost[] = [
+     { id: 'kblog1', title: 'Optimiser la Récupération Post-Op LCA', summary: 'Points clés et dernières recommandations pour la rééducation après une ligamentoplastie du LCA.', publishDate: '2024-07-20T00:00:00.000Z', tags: ['LCA', 'genou', 'post-op'], author: 'Dr. Sophie Leroy' },
+];
+const mockRehabProtocols: RehabProtocol[] = [
+    { id: 'proto1', name: 'Protocole Standard - Reconstruction LCA (Kenneth)', condition: 'ACL Reconstruction', description: 'Protocole phasé classique pour la rééducation post-opératoire du LCA.', phases: [], source: 'Protocole interne basé sur Kenneth', lastUpdated: '2024-06-01T00:00:00.000Z' },
+    { id: 'proto2', name: 'Protocole Accéléré - Réparation Coiffe des Rotateurs', condition: 'Rotator Cuff Repair', description: 'Protocole pour une reprise plus rapide après réparation arthroscopique.', phases: [], source: 'Journal of Shoulder and Elbow Surgery', lastUpdated: '2024-05-15T00:00:00.000Z' },
 ];
 // --- End Mock Data ---
 
 
 export default function KineDashboard() {
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
-  const [kineData] = useState<Kine | null>(initialMockKine);
-  const [patients, setPatients] = useState<Patient[]>(initialMockPatients); // Manage patients list with state
+  const [kineData, setKineData] = useState<Kine | null>(initialMockKine);
+  const [patients, setPatients] = useState<Patient[]>(initialMockPatients);
   const [notifications, setNotifications] = useState<{ feedbackAlerts: Feedback[], messages: MessageToKine[] }>({ feedbackAlerts: [], messages: [] });
-  const [isAddPatientModalOpen, setIsAddPatientModalOpen] = useState(false); // State for Add Patient modal
+  const [isAddPatientModalOpen, setIsAddPatientModalOpen] = useState(false);
   const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState('');
   const [expiringSubscriptions, setExpiringSubscriptions] = useState<Patient[]>([]);
 
-  // Update current date and check for expiring subscriptions on mount and when patients change
+  // Data states for new Kine features
+  const [shopPrograms, setShopPrograms] = useState<ShopProgram[]>(mockKineShopPrograms);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>(mockKineBlogPosts);
+  const [rehabProtocols] = useState<RehabProtocol[]>(mockRehabProtocols); // Assuming protocols are read-only for now
+  const [certifications, setCertifications] = useState<CertificationBadge[]>(initialMockKine.certifications || []);
+
+
   useEffect(() => {
     const today = new Date();
     setCurrentDate(format(today, "EEEE d MMMM yyyy", { locale: fr }));
-
-    const upcomingExpiryLimit = 14; // Days before expiry to show reminder
     const expiring = patients.filter(p => {
         if (!p.subscriptionEndDate) return false;
-        const endDate = parseISO(p.subscriptionEndDate);
-        const daysLeft = differenceInDays(endDate, today);
-        return daysLeft >= 0 && daysLeft <= upcomingExpiryLimit;
-    }).sort((a, b) => differenceInDays(parseISO(a.subscriptionEndDate!), today) - differenceInDays(parseISO(b.subscriptionEndDate!), today)); // Sort by soonest expiry
-
+        const daysLeft = differenceInDays(parseISO(p.subscriptionEndDate), today);
+        return daysLeft >= 0 && daysLeft <= 14;
+    }).sort((a, b) => differenceInDays(parseISO(a.subscriptionEndDate!), today) - differenceInDays(parseISO(b.subscriptionEndDate!), today));
     setExpiringSubscriptions(expiring);
-
   }, [patients]);
 
-
-  // Update notifications based on current patients list
   useEffect(() => {
       const kinePatientIds = patients.map(p => p.id);
-
-      const highPainFeedback = mockFeedbacks.filter(fb =>
-          kinePatientIds.includes(fb.patient_id) && fb.douleur_moyenne > 5
-      );
-
-      const unreadMessages = mockMessages.filter(msg =>
-          kinePatientIds.includes(msg.patient_id) && msg.status === 'unread'
-      );
-
+      const highPainFeedback = mockFeedbacks.filter(fb => kinePatientIds.includes(fb.patient_id) && fb.douleur_moyenne > 5);
+      const unreadMessages = mockMessages.filter(msg => kinePatientIds.includes(msg.patient_id) && msg.status === 'unread');
       highPainFeedback.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       unreadMessages.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
       setNotifications({ feedbackAlerts: highPainFeedback, messages: unreadMessages });
-  }, [kineData, patients]); // Re-run if kineData or patients list changes
+  }, [kineData, patients]);
 
-  const handlePatientSelect = (patientId: string) => {
-    setSelectedPatientId(patientId);
+  const handlePatientSelect = (patientId: string) => setSelectedPatientId(patientId);
+
+  const handleMarkMessageAsRead = (messageId: string) => {
+        console.log(`Marking message ${messageId} as read (simulated)`);
+        setNotifications(prev => ({ ...prev, messages: prev.messages.filter(msg => msg.id !== messageId) }));
+        const index = mockMessages.findIndex(m => m.id === messageId);
+        if (index > -1) mockMessages[index].status = 'read';
   };
 
-   const handleMarkMessageAsRead = (messageId: string) => {
-        // TODO: Implement actual Firestore update to mark message as read
-        console.log(`Marking message ${messageId} as read (simulated)`);
-        setNotifications(prev => ({
-            ...prev,
-            messages: prev.messages.filter(msg => msg.id !== messageId) // Optimistically remove from display
-        }));
-        // Update mockMessages state (or refetch) if needed for persistence in demo
-         const index = mockMessages.findIndex(m => m.id === messageId);
-         if (index > -1) mockMessages[index].status = 'read';
-    };
-
-   const handleAddPatient = (newPatientData: Omit<Patient, 'id' | 'kine_id' | 'pathologies' | 'remarques' | 'objectifs'>) => {
-      // Simulate adding patient to the database
+  const handleAddPatient = (newPatientData: Omit<Patient, 'id' | 'kine_id' | 'pathologies' | 'remarques' | 'objectifs'>) => {
       const newPatient: Patient = {
           ...newPatientData,
-          id: `patientTest${patients.length + 1}`, // Generate a mock ID
-          kine_id: kineData?.id || 'unknownKine',
-          pathologies: [], // Initialize empty arrays
-          remarques: '',
-          objectifs: [],
-          subscriptionEndDate: new Date(Date.now() + 86400000 * 30).toISOString(), // Default 30 days subscription
-          subscriptionStatus: 'active',
+          id: `patientTest${patients.length + 1}`, kine_id: kineData?.id || 'unknownKine',
+          pathologies: [], remarques: '', objectifs: [],
+          subscriptionEndDate: new Date(Date.now() + 86400000 * 30).toISOString(), subscriptionStatus: 'active',
       };
-
       console.log('Simulating adding patient:', newPatient);
-      // TODO: Replace with actual API call to add patient and send email
-
-      // Simulate sending credentials email
       console.log(`Simulating sending credentials to ${newPatient.email}`);
-      toast({
-          title: "Patient ajouté (Simulation)",
-          description: `${newPatient.prénom} ${newPatient.nom} a été ajouté. Un email avec ses identifiants lui a été envoyé (simulé).`,
-      });
-
-      // Update the local patients list
+      toast({ title: "Patient ajouté (Simulation)", description: `${newPatient.prénom} ${newPatient.nom} a été ajouté.` });
       setPatients(prevPatients => [...prevPatients, newPatient]);
-      setIsAddPatientModalOpen(false); // Close the modal
-       // Optionally select the newly added patient
+      setIsAddPatientModalOpen(false);
       setSelectedPatientId(newPatient.id);
-   };
+  };
+
+  // --- Handlers for new Kine features (Simulated) ---
+  const handleSaveShopProgram = (program: ShopProgram) => {
+    console.log("Saving shop program (simulated):", program);
+    // In real app: Save to Firestore, update state
+    setShopPrograms(prev => {
+        const index = prev.findIndex(p => p.id === program.id);
+        if (index > -1) {
+            const updated = [...prev];
+            updated[index] = program;
+            return updated;
+        }
+        return [...prev, { ...program, id: `shopProg${prev.length + 1}` }]; // Add with new mock ID
+    });
+    toast({ title: "Programme sauvegardé (Simulation)" });
+  };
+
+  const handleDeleteShopProgram = (programId: string) => {
+    console.log("Deleting shop program (simulated):", programId);
+    setShopPrograms(prev => prev.filter(p => p.id !== programId));
+    toast({ title: "Programme supprimé (Simulation)", variant: "destructive" });
+  };
+
+  const handleSaveBlogPost = (post: BlogPost) => {
+      console.log("Saving blog post (simulated):", post);
+      setBlogPosts(prev => {
+        const index = prev.findIndex(p => p.id === post.id);
+        if (index > -1) {
+            const updated = [...prev];
+            updated[index] = post;
+            return updated;
+        }
+        return [...prev, { ...post, id: `kblog${prev.length + 1}`, author: `${kineData?.prénom} ${kineData?.nom}` }]; // Add with new mock ID
+    });
+      toast({ title: "Article de blog sauvegardé (Simulation)" });
+  };
+
+   const handleDeleteBlogPost = (postId: string) => {
+      console.log("Deleting blog post (simulated):", postId);
+      setBlogPosts(prev => prev.filter(p => p.id !== postId));
+      toast({ title: "Article de blog supprimé (Simulation)", variant: "destructive" });
+  };
+
+  // --- End Handlers ---
 
 
-  const selectedPatient = patients.find(p => p.id === selectedPatientId); // Use state variable 'patients'
+  const selectedPatient = patients.find(p => p.id === selectedPatientId);
   const selectedPatientName = selectedPatient ? `${selectedPatient.prénom} ${selectedPatient.nom}` : 'le patient sélectionné';
 
   return (
     <div className="space-y-8">
-       {/* Date and Subscription Reminders Header */}
+        {/* Date and Subscription Reminders Header */}
         <div className="flex flex-col md:flex-row justify-between md:items-start gap-4 mb-6 p-4 bg-card rounded-lg shadow-sm border">
             <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
                 <CalendarDays className="w-5 h-5 text-primary"/>
                 <span className="capitalize">{currentDate}</span>
             </div>
-            {/* Subscription Reminders */}
             {expiringSubscriptions.length > 0 && (
                 <div className="w-full md:w-auto md:max-w-md lg:max-w-lg">
                     <Alert variant="default" className="border-yellow-400 bg-yellow-50 dark:bg-yellow-900/30 dark:border-yellow-700">
@@ -228,12 +186,9 @@ export default function KineDashboard() {
                                 <div key={p.id} className="flex justify-between items-center">
                                     <span>{p.prénom} {p.nom}</span>
                                     <span className="font-medium">
-                                        Expire le {format(parseISO(p.subscriptionEndDate!), 'd MMM yyyy', { locale: fr })}
-                                        {' '}(J-{differenceInDays(parseISO(p.subscriptionEndDate!), new Date())})
+                                        Expire le {format(parseISO(p.subscriptionEndDate!), 'd MMM yyyy', { locale: fr })} (J-{differenceInDays(parseISO(p.subscriptionEndDate!), new Date())})
                                     </span>
-                                    <Button variant="link" size="xs" className="h-5 p-0 text-xs text-primary" onClick={() => handlePatientSelect(p.id)}>
-                                        Voir
-                                    </Button>
+                                    <Button variant="link" size="xs" className="h-5 p-0 text-xs text-primary" onClick={() => handlePatientSelect(p.id)}>Voir</Button>
                                 </div>
                             ))}
                         </AlertDescription>
@@ -246,73 +201,113 @@ export default function KineDashboard() {
        <NotificationArea
            feedbackAlerts={notifications.feedbackAlerts}
            messages={notifications.messages}
-           patients={patients} // Pass current patients list
+           patients={patients}
            onSelectPatient={handlePatientSelect}
            onMarkMessageAsRead={handleMarkMessageAsRead}
        />
 
-      {/* Main Dashboard Header and Patient Selector */}
-      <Card className="shadow-md">
-        <CardHeader className="flex flex-row items-center justify-between pb-4">
-          <div>
-             <CardTitle>Tableau de Bord Kinésithérapeute</CardTitle>
-             <CardDescription>Gérez vos patients et suivez leurs progrès.</CardDescription>
-          </div>
-           <Button onClick={() => setIsAddPatientModalOpen(true)} variant="outline">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Ajouter Patient
-           </Button>
-        </CardHeader>
-        <CardContent>
-           {kineData && (
-               <p className="mb-4 text-muted-foreground">
-                   Bienvenue, Dr. {kineData.nom}. Spécialité : {kineData.spécialité}
-               </p>
-           )}
-          <PatientSelector
-            patients={patients} // Use state variable 'patients'
-            onSelectPatient={handlePatientSelect}
-            selectedPatientId={selectedPatientId}
-          />
-        </CardContent>
-      </Card>
+      {/* Main Dashboard */}
+      <Tabs defaultValue="patients" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6">
+            <TabsTrigger value="patients"><UserCheck className="w-4 h-4 mr-2"/>Gestion Patients</TabsTrigger>
+            <TabsTrigger value="marketplace"><Store className="w-4 h-4 mr-2"/>Marketplace</TabsTrigger>
+            <TabsTrigger value="blog"><BookOpen className="w-4 h-4 mr-2"/>Blog Pro</TabsTrigger>
+            <TabsTrigger value="templates"><Layers className="w-4 h-4 mr-2"/>Protocoles</TabsTrigger>
+            <TabsTrigger value="certifications"><Award className="w-4 h-4 mr-2"/>Certifications</TabsTrigger>
+        </TabsList>
 
-      {/* Selected Patient Details Area */}
-      {selectedPatientId && selectedPatient ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-           {/* Patient Information & Goals (Collapsible, closed by default) */}
-            <Accordion type="single" collapsible className="w-full lg:col-span-2">
-              <AccordionItem value="patient-info">
-                <AccordionTrigger className="text-lg font-semibold px-6 py-4 bg-card rounded-t-lg border data-[state=closed]:rounded-b-lg data-[state=closed]:border-b data-[state=open]:border-b-0 hover:no-underline hover:bg-muted/50">
-                    <div className="flex items-center gap-2">
-                        <UserCheck className="w-5 h-5 text-primary" /> {/* Icon for Patient Info */}
-                        Informations & Bilan Initial - {selectedPatientName}
-                    </div>
-                </AccordionTrigger>
-                <AccordionContent className="border border-t-0 rounded-b-lg bg-card p-0">
-                  {/* Pass the selected patient data and a (mock) save handler */}
-                  <PatientInfoForm patient={selectedPatient} />
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+        {/* Patient Management Tab */}
+        <TabsContent value="patients" className="space-y-8">
+             <Card className="shadow-md">
+                <CardHeader className="flex flex-row items-center justify-between pb-4">
+                  <div>
+                     <CardTitle>Gestion des Patients</CardTitle>
+                     <CardDescription>Sélectionnez un patient pour voir ses détails ou ajoutez-en un nouveau.</CardDescription>
+                  </div>
+                   <Button onClick={() => setIsAddPatientModalOpen(true)} variant="outline">
+                      <PlusCircle className="mr-2 h-4 w-4" /> Ajouter Patient
+                   </Button>
+                </CardHeader>
+                <CardContent>
+                   {kineData && (
+                       <p className="mb-4 text-muted-foreground">
+                           Bienvenue, Dr. {kineData.nom}. Spécialité : {kineData.spécialité}
+                       </p>
+                   )}
+                  <PatientSelector
+                    patients={patients}
+                    onSelectPatient={handlePatientSelect}
+                    selectedPatientId={selectedPatientId}
+                  />
+                </CardContent>
+             </Card>
 
-           {/* Patient Feedback Display */}
-           <div className="lg:col-span-2">
-                <PatientFeedbackDisplay patientId={selectedPatientId} />
-           </div>
+              {/* Selected Patient Details Area */}
+              {selectedPatientId && selectedPatient ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <Accordion type="single" collapsible className="w-full lg:col-span-2">
+                      <AccordionItem value="patient-info">
+                        <AccordionTrigger className="text-lg font-semibold px-6 py-4 bg-card rounded-t-lg border data-[state=closed]:rounded-b-lg data-[state=closed]:border-b data-[state=open]:border-b-0 hover:no-underline hover:bg-muted/50">
+                            <div className="flex items-center gap-2">
+                                <UserCheck className="w-5 h-5 text-primary" />
+                                Informations & Bilan - {selectedPatientName}
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="border border-t-0 rounded-b-lg bg-card p-0">
+                          <PatientInfoForm patient={selectedPatient} />
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                   <div className="lg:col-span-2">
+                        <PatientFeedbackDisplay patientId={selectedPatientId} />
+                   </div>
+                   {/* TODO: Add Progress Test Results display for Kine */}
+                   {/* <div className="lg:col-span-2"> ...ProgressTestResultsDisplay... </div> */}
+                </div>
+              ) : (
+                <Card className="shadow-md">
+                    <CardContent className="pt-6">
+                        <p className="text-center text-muted-foreground">
+                           {patients.length > 0 ? "Sélectionnez un patient pour voir ses informations." : "Aucun patient. Cliquez sur 'Ajouter Patient'."}
+                        </p>
+                    </CardContent>
+                </Card>
+              )}
+        </TabsContent>
 
-        </div>
-      ) : (
-        <Card className="shadow-md">
-            <CardContent className="pt-6">
-                <p className="text-center text-muted-foreground">
-                   {patients.length > 0
-                      ? "Veuillez sélectionner un patient pour voir ses informations et feedbacks."
-                      : "Aucun patient n'est enregistré. Cliquez sur 'Ajouter Patient' pour commencer."}
-                </p>
-            </CardContent>
-        </Card>
-      )}
+        {/* Marketplace Tab */}
+        <TabsContent value="marketplace">
+            <MarketplaceManager
+                kineId={kineData?.id || ''}
+                existingPrograms={shopPrograms}
+                onSave={handleSaveShopProgram}
+                onDelete={handleDeleteShopProgram}
+            />
+        </TabsContent>
+
+        {/* Blog Tab */}
+        <TabsContent value="blog">
+            <BlogManager
+                kineId={kineData?.id || ''}
+                existingPosts={blogPosts}
+                onSave={handleSaveBlogPost}
+                onDelete={handleDeleteBlogPost}
+                kineName={`${kineData?.prénom} ${kineData?.nom}`}
+            />
+        </TabsContent>
+
+        {/* Templates Tab */}
+        <TabsContent value="templates">
+            <TemplateBrowser protocols={rehabProtocols} />
+        </TabsContent>
+
+         {/* Certifications Tab */}
+        <TabsContent value="certifications">
+            <KineCertificationManager certifications={certifications} />
+        </TabsContent>
+
+      </Tabs>
+
 
        {/* Add Patient Modal */}
        <AddPatientModal
@@ -321,7 +316,7 @@ export default function KineDashboard() {
            onPatientAdded={handleAddPatient}
        />
 
-       {/* TODO: Add other Kine features later (e.g., Program Generation, Kine Chatbot) */}
+       {/* TODO: Add other Kine features (e.g., Program Generation, Kine Chatbot) */}
     </div>
   );
 }
