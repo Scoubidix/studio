@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -6,10 +7,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Layers, Eye, Copy } from 'lucide-react';
+import { Layers, Eye, Copy, Search } from 'lucide-react'; // Added Search icon
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input'; // Import Input
 
 interface TemplateBrowserProps {
   protocols: RehabProtocol[];
@@ -18,6 +20,7 @@ interface TemplateBrowserProps {
 export default function TemplateBrowser({ protocols }: TemplateBrowserProps) {
   const [selectedProtocol, setSelectedProtocol] = useState<RehabProtocol | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(''); // State for search term
   const { toast } = useToast();
 
   const openModal = (protocol: RehabProtocol) => {
@@ -35,20 +38,45 @@ export default function TemplateBrowser({ protocols }: TemplateBrowserProps) {
     // In a real app, this might trigger navigation to a program creation screen with pre-filled data.
   };
 
+  // Filter protocols based on search term
+  const filteredProtocols = protocols.filter(protocol => {
+      const lowerSearchTerm = searchTerm.toLowerCase();
+      const keywordsMatch = protocol.keywords?.some(kw => kw.toLowerCase().includes(lowerSearchTerm));
+      return (
+          protocol.name.toLowerCase().includes(lowerSearchTerm) ||
+          protocol.condition.toLowerCase().includes(lowerSearchTerm) ||
+          protocol.description.toLowerCase().includes(lowerSearchTerm) ||
+          keywordsMatch
+      );
+  });
+
   return (
     <Card className="shadow-md">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Layers className="w-5 h-5 text-primary" /> Protocoles de Rééducation Types
-        </CardTitle>
-        <CardDescription>
-          Consultez des modèles de protocoles basés sur des données récentes. Vous pourrez les personnaliser lors de la création de programmes.
-        </CardDescription>
+      <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div className="flex-grow">
+            <CardTitle className="flex items-center gap-2">
+              <Layers className="w-5 h-5 text-primary" /> Protocoles de Rééducation Types
+            </CardTitle>
+            <CardDescription>
+              Consultez des modèles de protocoles basés sur des données récentes. Vous pourrez les personnaliser lors de la création de programmes.
+            </CardDescription>
+        </div>
+         {/* Search Bar */}
+         <div className="relative mt-4 md:mt-0 md:w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+                type="search"
+                placeholder="Rechercher protocole (ex: LCA)..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8 h-9"
+            />
+         </div>
       </CardHeader>
       <CardContent>
-        {protocols.length > 0 ? (
+        {filteredProtocols.length > 0 ? (
           <div className="space-y-4">
-            {protocols.map((protocol) => (
+            {filteredProtocols.map((protocol) => (
               <Card key={protocol.id} className="p-4 flex justify-between items-center border">
                  <div className="flex-grow mr-4">
                     <h4 className="font-semibold">{protocol.name}</h4>
@@ -68,7 +96,9 @@ export default function TemplateBrowser({ protocols }: TemplateBrowserProps) {
             ))}
           </div>
         ) : (
-          <p className="text-center text-muted-foreground">Aucun protocole type disponible pour le moment.</p>
+          <p className="text-center text-muted-foreground pt-6">
+            {searchTerm ? `Aucun protocole trouvé pour "${searchTerm}".` : "Aucun protocole type disponible pour le moment."}
+          </p>
         )}
       </CardContent>
 
@@ -141,3 +171,5 @@ export default function TemplateBrowser({ protocols }: TemplateBrowserProps) {
     </Card>
   );
 }
+
+    

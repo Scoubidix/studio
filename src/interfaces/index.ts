@@ -1,3 +1,4 @@
+
 export interface Exercise {
   id: string;
   nom: string;
@@ -49,6 +50,8 @@ export interface Patient {
   subscriptionStatus?: 'active' | 'expiring' | 'expired';
   purchasedProgramIds?: string[]; // IDs of programs bought from the shop
   progressTestResults?: ProgressTestResult[]; // Track test results
+  progressPoints?: number; // For gamification
+  pseudo?: string; // Anonymous name for leaderboards
 }
 
 export interface MessageToKine {
@@ -111,6 +114,7 @@ export interface RehabProtocol {
     }[];
     source?: string; // Where the protocol comes from (e.g., "Internal Guideline", "Journal XYZ")
     lastUpdated: string; // ISO date string
+    keywords?: string[]; // Keywords for searching
 }
 
 // For Kine certifications/badges
@@ -141,3 +145,5 @@ export interface ProgressTestResult {
     results: { metricName: string; value: number | string }[];
     notes?: string;
 }
+
+    

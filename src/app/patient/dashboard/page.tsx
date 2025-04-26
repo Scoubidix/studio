@@ -1,3 +1,4 @@
+
 'use client'; // Need client component for state, effects, event handlers
 
 import { useState, useEffect } from 'react';
@@ -15,23 +16,23 @@ import ShopDisplay from '@/components/patient/shop-display'; // Import new compo
 import ProgressTestDisplay from '@/components/patient/progress-test-display'; // Import new component
 import KineCertificationDisplay from '@/components/patient/kine-certification-display'; // Import new component
 import Image from 'next/image';
-import { Dumbbell, Activity, StretchVertical, Trophy, CalendarDays, ArrowRight, Target, Share2, BookOpen, Microscope, ShoppingBag, ClipboardCheck, Award } from 'lucide-react'; // Added new icons
+import { Dumbbell, Activity, StretchVertical, Trophy, CalendarDays, ArrowRight, Target, Share2, BookOpen, Microscope, ShoppingBag, ClipboardCheck, Award, BarChart } from 'lucide-react'; // Added new icons
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
 // --- Mock Data (Replace with actual data fetching later) ---
 const mockExercises: Exercise[] = [
-  { id: 'ex1', nom: 'Squat', description: 'Flexion des genoux et des hanches...', detailed_steps: ["Tenez-vous debout...", "Gardez le dos droit...", "..."], niveau: 'débutant', catégorie: 'renforcement', image_url: 'https://picsum.photos/seed/squat/300/200' },
-  { id: 'ex2', nom: 'Étirement Ischio-jambiers', description: 'Étirement des muscles postérieurs...', detailed_steps: ["Asseyez-vous au sol...", "..."], niveau: 'intermédiaire', catégorie: 'étirement', image_url: 'https://picsum.photos/seed/hamstring/300/200' },
-  { id: 'ex3', nom: 'Rotation Tronc Assis', description: 'Mobilisation de la colonne...', detailed_steps: ["Asseyez-vous droit...", "..."], niveau: 'débutant', catégorie: 'mobilité', image_url: 'https://picsum.photos/seed/rotation/300/200' },
+  { id: 'ex1', nom: 'Squat', description: 'Flexion des genoux et des hanches...', detailed_steps: ["Tenez-vous debout, pieds écartés à la largeur des épaules.", "Gardez le dos droit, la poitrine haute et les abdominaux engagés.", "Descendez comme si vous vous asseyiez sur une chaise, en gardant les genoux alignés avec les orteils.", "Remontez en poussant sur les talons."], niveau: 'débutant', catégorie: 'renforcement', image_url: 'https://picsum.photos/seed/squat/300/200' },
+  { id: 'ex2', nom: 'Étirement Ischio-jambiers', description: 'Étirement des muscles postérieurs...', detailed_steps: ["Asseyez-vous au sol, une jambe tendue devant vous.", "Ramenez l'autre pied vers l'intérieur de la cuisse tendue.", "Penchez-vous doucement vers l'avant à partir des hanches, en gardant le dos droit.", "Maintenez la position pendant 30 secondes, puis changez de jambe."], niveau: 'intermédiaire', catégorie: 'étirement', image_url: 'https://picsum.photos/seed/hamstring/300/200' },
+  { id: 'ex3', nom: 'Rotation Tronc Assis', description: 'Mobilisation de la colonne...', detailed_steps: ["Asseyez-vous droit sur une chaise, pieds à plat au sol.", "Placez une main sur le genou opposé et l'autre derrière vous sur la chaise.", "Tournez doucement le tronc vers l'arrière, en regardant par-dessus votre épaule.", "Maintenez brièvement, puis revenez lentement et changez de côté."], niveau: 'débutant', catégorie: 'mobilité', image_url: 'https://picsum.photos/seed/rotation/300/200' },
 ];
 
 const mockProgram: Program = {
   id: 'prog123', patient_id: 'patientTest',
   liste_exercices: [
     { exercice_id: 'ex1', séries: 3, répétitions: 12 },
-    { exercice_id: 'ex2', séries: 2, répétitions: 30 },
+    { exercice_id: 'ex2', séries: 2, répétitions: 30 }, // Reps are seconds for stretching
     { exercice_id: 'ex3', séries: 3, répétitions: 10 },
   ],
   statut: 'actif', date_creation: new Date().toISOString(),
@@ -43,6 +44,8 @@ const mockPatientData: Patient = {
   remarques: 'Motivé mais craint la douleur.', kine_id: 'kineTest1',
   objectifs: ['Amélioration de la mobilité lombaire', 'Reprise progressive de la course à pied'],
   purchasedProgramIds: ['shopProg1'], // Example purchased program
+  progressPoints: 1250, // Mock points
+  pseudo: 'JeanD85', // Mock pseudo
 };
 
 const mockKineData: Kine = { // Mock data for the assigned Kine
@@ -69,9 +72,26 @@ const mockProgressTests: ProgressTest[] = [
     { id: 'test2', name: 'Test d\'Équilibre Unipodal', description: 'Mesurez votre stabilité sur une jambe.', instructions: ['Tenez-vous sur un pied...', 'Gardez les yeux ouverts...'], metrics: [{ name: 'Temps (yeux ouverts)', unit: 'sec' }, { name: 'Temps (yeux fermés)', unit: 'sec' }], frequency: 'Toutes les 2 semaines', imageUrl: 'https://picsum.photos/seed/balance/300/150' },
 ];
 
+// Mock Leaderboard Data
+const mockLeaderboard = [
+    { pseudo: 'AlexR92', points: 1850, rank: 1 },
+    { pseudo: 'RunnerGirl', points: 1500, rank: 2 },
+    { pseudo: mockPatientData.pseudo, points: mockPatientData.progressPoints, rank: 3 }, // Current patient
+    { pseudo: 'KneePro', points: 1100, rank: 4 },
+    { pseudo: 'BackFlex', points: 950, rank: 5 },
+];
+
+// Mock Rewards Data
+const mockRewards = [
+    { pointsRequired: 1000, description: "5€ de réduction sur la boutique", claimed: true }, // Example claimed
+    { pointsRequired: 2500, description: "15€ de réduction sur la boutique", claimed: false },
+    { pointsRequired: 5000, description: "Programme au choix offert", claimed: false },
+];
+
+
 const getExerciseDetails = (exerciseId: string): Exercise | undefined => mockExercises.find(ex => ex.id === exerciseId);
 const populatedProgramExercises: ProgramExercise[] = mockProgram.liste_exercices.map(progEx => ({ ...progEx, exerciseDetails: getExerciseDetails(progEx.exercice_id) }));
-const motivationalQuotes = [ "Chaque petit pas compte...", "La persévérance est la clé..."]; // Removed the extra '...'
+const motivationalQuotes = [ "Chaque petit pas compte.", "La persévérance est la clé."]; // Removed the extra '...'
 
 const getCategoryIcon = (category: Exercise['catégorie']) => {
   switch (category) {
@@ -92,6 +112,7 @@ export default function PatientDashboard() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [patientGoals, setPatientGoals] = useState<string[]>(mockPatientData.objectifs);
   const [kineCertifications, setKineCertifications] = useState<CertificationBadge[]>(mockKineData.certifications || []); // State for certifications
+  const [currentPoints, setCurrentPoints] = useState(mockPatientData.progressPoints || 0); // Gamification points
   const { toast } = useToast();
 
   useEffect(() => {
@@ -104,7 +125,11 @@ export default function PatientDashboard() {
   const handleFeedbackSubmitted = () => {
     setSessionStreak(prev => prev + 1);
     setTotalSessions(prev => prev + 1);
+    // Simulate earning points for feedback
+    const pointsEarned = 50;
+    setCurrentPoints(prev => prev + pointsEarned);
     setMotivationalQuote(motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]);
+    toast({ title: "Feedback envoyé !", description: `Vous avez gagné ${pointsEarned} points !`});
     console.log("Gamification state updated (simulated)");
   };
 
@@ -139,9 +164,20 @@ export default function PatientDashboard() {
 
   const handleTestSubmit = (testId: string, results: any) => {
       console.log("Submitting test results for:", testId, results);
-      toast({ title: "Résultats enregistrés !", description: "Vos résultats de test ont été sauvegardés."});
+      // Simulate earning points for test submission
+      const pointsEarned = 100;
+      setCurrentPoints(prev => prev + pointsEarned);
+      toast({ title: "Résultats enregistrés !", description: `Vos résultats de test ont été sauvegardés. Vous avez gagné ${pointsEarned} points !`});
       // TODO: Save results to Firestore
   };
+
+  const handleClaimReward = (rewardDescription: string) => {
+      // Simulate claiming reward
+      console.log("Claiming reward:", rewardDescription);
+      toast({ title: "Récompense réclamée !", description: `Code promo pour "${rewardDescription}" simulé.`});
+      // TODO: Add logic to mark reward as claimed and potentially deduct points or generate code
+  };
+
 
   return (
     <div className="space-y-8">
@@ -172,6 +208,8 @@ export default function PatientDashboard() {
                             <span className="text-sm text-muted-foreground">jrs suite</span>
                          </div>
                          <p className="text-xs text-muted-foreground mt-1">{totalSessions} séances complétées</p>
+                          {/* Display Current Points */}
+                         <p className="text-xs text-muted-foreground mt-1 font-medium">{currentPoints} points</p>
                      </div>
                       <Button
                          variant="outline"
@@ -191,17 +229,18 @@ export default function PatientDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="programme" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 mb-6">
+        {/* Updated TabsList for 5 items */}
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 mb-6">
           <TabsTrigger value="programme"><Dumbbell className="w-4 h-4 mr-1 md:mr-2"/>Programme</TabsTrigger>
-          <TabsTrigger value="feedback"><ClipboardCheck className="w-4 h-4 mr-1 md:mr-2"/>Feedback</TabsTrigger>
+          {/* Removed Feedback Tab */}
           <TabsTrigger value="tests"><Activity className="w-4 h-4 mr-1 md:mr-2"/>Tests Prog.</TabsTrigger>
           <TabsTrigger value="blog"><BookOpen className="w-4 h-4 mr-1 md:mr-2"/>Infos</TabsTrigger>
           <TabsTrigger value="rapports"><Microscope className="w-4 h-4 mr-1 md:mr-2"/>Rapports</TabsTrigger>
           <TabsTrigger value="boutique"><ShoppingBag className="w-4 h-4 mr-1 md:mr-2"/>Boutique</TabsTrigger>
         </TabsList>
 
-        {/* Programme Tab */}
-        <TabsContent value="programme">
+        {/* Programme Tab with Feedback Form */}
+        <TabsContent value="programme" className="space-y-8">
             <Card className="shadow-md">
             <CardHeader>
               <CardTitle>Votre Programme d'Exercices</CardTitle>
@@ -253,35 +292,90 @@ export default function PatientDashboard() {
               ) : <p className="text-muted-foreground">Aucun programme actif.</p>}
             </CardContent>
             </Card>
-        </TabsContent>
 
-        {/* Feedback Tab */}
-        <TabsContent value="feedback">
-            <FeedbackForm
+            {/* Feedback Form moved here */}
+             <FeedbackForm
                 programId={mockProgram.id}
                 patientId={mockProgram.patient_id}
                 onFeedbackSubmitted={handleFeedbackSubmitted}
             />
-             {/* History Section */}
-            <Card className="shadow-md mt-8">
+             {/* History Section - Kept for potential future use */}
+            {/* <Card className="shadow-md mt-8">
                 <CardHeader>
                   <CardTitle>Historique des Séances</CardTitle>
                   <CardDescription>Consultez vos précédents feedbacks.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">L'historique des feedbacks sera disponible bientôt.</p>
-                  {/* TODO: Implement feedback history display */}
+                  {/* TODO: Implement feedback history display *}
                 </CardContent>
-            </Card>
+            </Card> */}
         </TabsContent>
 
-         {/* Progress Tests Tab */}
-        <TabsContent value="tests">
+         {/* Progress Tests Tab with Leaderboard/Rewards */}
+        <TabsContent value="tests" className="space-y-8">
             <ProgressTestDisplay
                 tests={mockProgressTests}
                 patientId={mockPatientData.id}
                 onSubmit={handleTestSubmit}
             />
+             {/* Leaderboard and Rewards Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Leaderboard Card */}
+                <Card className="shadow-md">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><BarChart className="w-5 h-5 text-primary" /> Classement des Tests</CardTitle>
+                        <CardDescription>Comparez vos points avec d'autres patients.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {mockLeaderboard.length > 0 ? (
+                            <ol className="space-y-2">
+                                {mockLeaderboard.slice(0, 5).map(entry => ( // Show top 5
+                                    <li key={entry.pseudo} className={`flex justify-between items-center p-2 rounded-md text-sm ${entry.pseudo === mockPatientData.pseudo ? 'bg-accent/20 border border-accent' : ''}`}>
+                                        <span className="flex items-center gap-2">
+                                            <span className="font-bold w-6 text-center">{entry.rank}.</span>
+                                            <span>{entry.pseudo}</span>
+                                        </span>
+                                        <span className="font-semibold">{entry.points} pts</span>
+                                    </li>
+                                ))}
+                            </ol>
+                        ) : (
+                             <p className="text-muted-foreground text-center">Le classement sera bientôt disponible.</p>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Rewards Card */}
+                <Card className="shadow-md">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Trophy className="w-5 h-5 text-yellow-500" /> Récompenses</CardTitle>
+                        <CardDescription>Utilisez vos points pour obtenir des réductions.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                         <div className="space-y-3">
+                            {mockRewards.map((reward, index) => (
+                                <div key={index} className="flex justify-between items-center p-3 border rounded-md bg-muted/30">
+                                    <div className="flex-grow mr-4">
+                                        <p className="font-medium">{reward.description}</p>
+                                        <p className="text-xs text-muted-foreground">{reward.pointsRequired} points requis</p>
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        className="text-xs h-7"
+                                        variant={reward.claimed ? "outline" : "default"}
+                                        disabled={currentPoints < reward.pointsRequired || reward.claimed}
+                                        onClick={() => handleClaimReward(reward.description)}
+                                    >
+                                        {reward.claimed ? 'Réclamé' : (currentPoints >= reward.pointsRequired ? 'Réclamer' : 'Points insuf.')}
+                                    </Button>
+                                </div>
+                            ))}
+                         </div>
+                    </CardContent>
+                </Card>
+
+            </div>
         </TabsContent>
 
         {/* Blog/Info Tab */}
@@ -319,3 +413,5 @@ export default function PatientDashboard() {
     </div>
   );
 }
+
+    

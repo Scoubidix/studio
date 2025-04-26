@@ -1,3 +1,4 @@
+
 // @refresh reset - Prevent error during compilation
 'use client';
 
@@ -12,14 +13,15 @@ import PatientFeedbackDisplay from '@/components/kine/patient-feedback-display';
 import NotificationArea from '@/components/kine/notification-area';
 import AddPatientModal from '@/components/kine/add-patient-modal';
 import MarketplaceManager from '@/components/kine/marketplace-manager'; // Import new component
-import BlogManager from '@/components/kine/blog-manager'; // Import new component
+// Removed BlogManager import, will use BlogDisplay
+import BlogDisplay from '@/components/shared/blog-display'; // Import shared BlogDisplay
 import TemplateBrowser from '@/components/kine/template-browser'; // Import new component
 import KineCertificationManager from '@/components/kine/kine-certification-manager'; // Import new component
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import type { Patient, Kine, Feedback, MessageToKine, ShopProgram, BlogPost, RehabProtocol, CertificationBadge } from '@/interfaces';
 import { mockFeedbacks } from '@/components/kine/mock-data';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Layers, Award } from 'lucide-react'; // Import new icons
+import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Layers, Award, ChevronDown, ChevronUp } from 'lucide-react'; // Import new icons
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -49,12 +51,16 @@ const mockMessages: MessageToKine[] = [
 const mockKineShopPrograms: ShopProgram[] = [
     { id: 'shopProg2', kine_id: 'kineTest1', title: 'Programme Anti-Mal de Dos (Bureau)', description: 'Exercices simples pour soulager les tensions...', targetAudience: 'Travailleurs de bureau', price: 19.99, currency: 'EUR', exerciseList: [], tags: ['dos', 'bureau'], imageUrl: 'https://picsum.photos/seed/desk/300/150' },
 ];
+
+// Mock Blog posts for Kine (Scientific summaries)
 const mockKineBlogPosts: BlogPost[] = [
-     { id: 'kblog1', title: 'Optimiser la Récupération Post-Op LCA', summary: 'Points clés et dernières recommandations pour la rééducation après une ligamentoplastie du LCA.', publishDate: '2024-07-20T00:00:00.000Z', tags: ['LCA', 'genou', 'post-op'], author: 'Dr. Sophie Leroy' },
+     { id: 'kblog1', title: 'Optimiser la Récupération Post-Op LCA', summary: 'Points clés et dernières recommandations pour la rééducation après une ligamentoplastie du LCA. Inclut revue de littérature sur protocoles accélérés vs conservateurs.', publishDate: '2024-07-20T00:00:00.000Z', tags: ['LCA', 'genou', 'post-op', 'evidence-based'], author: 'Dr. Sophie Leroy', contentUrl: '#', imageUrl: 'https://picsum.photos/seed/lca-science/300/150' },
+     { id: 'kblog2', title: 'Tendinopathies d\'Achille : Approches Thérapeutiques Actuelles', summary: 'Synthèse des données sur la prise en charge des tendinopathies achilléennes, focus sur les exercices excentriques, ondes de choc et thérapie manuelle.', publishDate: '2024-07-18T00:00:00.000Z', tags: ['tendinopathie', 'achille', 'rééducation', 'evidence-based'], author: 'Dr. Alain Dubois', contentUrl: '#', imageUrl: 'https://picsum.photos/seed/achilles/300/150' },
+     { id: 'kblog3', title: 'Syndrome Douloureux Fémoro-Patellaire : Diagnostic et Traitement', summary: 'Critères diagnostiques et revue des interventions efficaces (renforcement quadricipital et fessier, taping, orthèses plantaires).', publishDate: '2024-06-10T00:00:00.000Z', tags: ['genou', 'SDFP', 'syndrome rotulien', 'diagnostic', 'traitement'], author: 'Dr. Sophie Leroy', contentUrl: '#', imageUrl: 'https://picsum.photos/seed/pfps/300/150' },
 ];
 const mockRehabProtocols: RehabProtocol[] = [
-    { id: 'proto1', name: 'Protocole Standard - Reconstruction LCA (Kenneth)', condition: 'ACL Reconstruction', description: 'Protocole phasé classique pour la rééducation post-opératoire du LCA.', phases: [], source: 'Protocole interne basé sur Kenneth', lastUpdated: '2024-06-01T00:00:00.000Z' },
-    { id: 'proto2', name: 'Protocole Accéléré - Réparation Coiffe des Rotateurs', condition: 'Rotator Cuff Repair', description: 'Protocole pour une reprise plus rapide après réparation arthroscopique.', phases: [], source: 'Journal of Shoulder and Elbow Surgery', lastUpdated: '2024-05-15T00:00:00.000Z' },
+    { id: 'proto1', name: 'Protocole Standard - Reconstruction LCA (Kenneth)', condition: 'ACL Reconstruction', description: 'Protocole phasé classique pour la rééducation post-opératoire du LCA.', phases: [], source: 'Protocole interne basé sur Kenneth', lastUpdated: '2024-06-01T00:00:00.000Z', keywords: ['genou', 'lca', 'ligament croisé', 'standard', 'kenneth'] },
+    { id: 'proto2', name: 'Protocole Accéléré - Réparation Coiffe des Rotateurs', condition: 'Rotator Cuff Repair', description: 'Protocole pour une reprise plus rapide après réparation arthroscopique.', phases: [], source: 'Journal of Shoulder and Elbow Surgery', lastUpdated: '2024-05-15T00:00:00.000Z', keywords: ['épaule', 'coiffe des rotateurs', 'arthroscopie', 'accéléré'] },
 ];
 // --- End Mock Data ---
 
@@ -68,10 +74,12 @@ export default function KineDashboard() {
   const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState('');
   const [expiringSubscriptions, setExpiringSubscriptions] = useState<Patient[]>([]);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(true); // State for notification accordion
 
   // Data states for new Kine features
   const [shopPrograms, setShopPrograms] = useState<ShopProgram[]>(mockKineShopPrograms);
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>(mockKineBlogPosts);
+  // Blog posts state now uses kine-specific blog posts
+  const [kineBlogPosts] = useState<BlogPost[]>(mockKineBlogPosts); // Assuming read-only for now
   const [rehabProtocols] = useState<RehabProtocol[]>(mockRehabProtocols); // Assuming protocols are read-only for now
   const [certifications, setCertifications] = useState<CertificationBadge[]>(initialMockKine.certifications || []);
 
@@ -142,31 +150,12 @@ export default function KineDashboard() {
     toast({ title: "Programme supprimé (Simulation)", variant: "destructive" });
   };
 
-  const handleSaveBlogPost = (post: BlogPost) => {
-      console.log("Saving blog post (simulated):", post);
-      setBlogPosts(prev => {
-        const index = prev.findIndex(p => p.id === post.id);
-        if (index > -1) {
-            const updated = [...prev];
-            updated[index] = post;
-            return updated;
-        }
-        return [...prev, { ...post, id: `kblog${prev.length + 1}`, author: `${kineData?.prénom} ${kineData?.nom}` }]; // Add with new mock ID
-    });
-      toast({ title: "Article de blog sauvegardé (Simulation)" });
-  };
-
-   const handleDeleteBlogPost = (postId: string) => {
-      console.log("Deleting blog post (simulated):", postId);
-      setBlogPosts(prev => prev.filter(p => p.id !== postId));
-      toast({ title: "Article de blog supprimé (Simulation)", variant: "destructive" });
-  };
-
   // --- End Handlers ---
 
 
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
   const selectedPatientName = selectedPatient ? `${selectedPatient.prénom} ${selectedPatient.nom}` : 'le patient sélectionné';
+  const totalNotifications = notifications.feedbackAlerts.length + notifications.messages.length;
 
   return (
     <div className="space-y-8">
@@ -197,14 +186,45 @@ export default function KineDashboard() {
             )}
         </div>
 
-       {/* Notification Area */}
-       <NotificationArea
-           feedbackAlerts={notifications.feedbackAlerts}
-           messages={notifications.messages}
-           patients={patients}
-           onSelectPatient={handlePatientSelect}
-           onMarkMessageAsRead={handleMarkMessageAsRead}
-       />
+       {/* Collapsible Notification Area */}
+       <Accordion type="single" collapsible defaultValue={totalNotifications > 0 ? "notifications" : ""} onValueChange={(value) => setIsNotificationsOpen(value === "notifications")}>
+            <AccordionItem value="notifications" className="border-none">
+                {/* Custom Trigger */}
+                <AccordionTrigger
+                    className={`flex items-center justify-between w-full px-4 py-3 text-left text-lg font-semibold rounded-t-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                        isNotificationsOpen ? 'bg-muted rounded-b-none border-x border-t' : 'bg-card rounded-b-lg border'
+                     } ${totalNotifications > 0 ? 'text-orange-700 dark:text-orange-300' : 'text-foreground'}`}
+                     aria-label={isNotificationsOpen ? "Masquer les notifications" : "Afficher les notifications"}
+                 >
+                     <div className="flex items-center gap-2">
+                        <BellRing className="w-5 h-5"/>
+                        Notifications
+                        {totalNotifications > 0 && (
+                           <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                             {totalNotifications}
+                           </span>
+                        )}
+                     </div>
+                    {isNotificationsOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                </AccordionTrigger>
+                <AccordionContent className="border-x border-b rounded-b-lg p-0 bg-card">
+                    {totalNotifications > 0 ? (
+                        <NotificationArea
+                            feedbackAlerts={notifications.feedbackAlerts}
+                            messages={notifications.messages}
+                            patients={patients}
+                            onSelectPatient={handlePatientSelect}
+                            onMarkMessageAsRead={handleMarkMessageAsRead}
+                        />
+                    ) : (
+                        <div className="p-6 text-center text-muted-foreground">
+                            Aucune nouvelle notification.
+                        </div>
+                    )}
+                </AccordionContent>
+            </AccordionItem>
+        </Accordion>
+
 
       {/* Main Dashboard */}
       <Tabs defaultValue="patients" className="w-full">
@@ -245,6 +265,7 @@ export default function KineDashboard() {
               {/* Selected Patient Details Area */}
               {selectedPatientId && selectedPatient ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Accordion for Patient Info and Assessment */}
                     <Accordion type="single" collapsible className="w-full lg:col-span-2">
                       <AccordionItem value="patient-info">
                         <AccordionTrigger className="text-lg font-semibold px-6 py-4 bg-card rounded-t-lg border data-[state=closed]:rounded-b-lg data-[state=closed]:border-b data-[state=open]:border-b-0 hover:no-underline hover:bg-muted/50">
@@ -285,14 +306,14 @@ export default function KineDashboard() {
             />
         </TabsContent>
 
-        {/* Blog Tab */}
+        {/* Blog Pro Tab (using shared BlogDisplay) */}
         <TabsContent value="blog">
-            <BlogManager
-                kineId={kineData?.id || ''}
-                existingPosts={blogPosts}
-                onSave={handleSaveBlogPost}
-                onDelete={handleDeleteBlogPost}
-                kineName={`${kineData?.prénom} ${kineData?.nom}`}
+             <BlogDisplay
+                posts={kineBlogPosts}
+                title="Blog Professionnel - Articles & Synthèses"
+                description="Consultez des résumés d'articles scientifiques et des synthèses pour votre pratique."
+                showAuthor={true} // Show author for kine blog
+                showSearch={true} // Enable search for kine blog
             />
         </TabsContent>
 
@@ -320,3 +341,5 @@ export default function KineDashboard() {
     </div>
   );
 }
+
+    

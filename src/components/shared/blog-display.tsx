@@ -1,39 +1,71 @@
+
 'use client';
 
+import { useState } from 'react'; // Import useState
 import type { BlogPost } from '@/interfaces';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { Calendar, Tags, BookOpen } from 'lucide-react';
+import { Calendar, Tags, BookOpen, Search } from 'lucide-react'; // Added Search icon
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input'; // Import Input
 
 interface BlogDisplayProps {
   posts: BlogPost[];
   title?: string; // Optional title for the section
   description?: string; // Optional description
   showAuthor?: boolean; // Option to show author (for Kine blog)
+  showSearch?: boolean; // Option to show search bar (for Kine blog)
 }
 
 export default function BlogDisplay({
     posts,
     title = "Infos & Conseils",
     description = "Découvrez des articles pour mieux comprendre votre corps et votre rééducation.",
-    showAuthor = false
+    showAuthor = false,
+    showSearch = false // Default to false
 }: BlogDisplayProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredPosts = posts.filter(post => {
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    return (
+      post.title.toLowerCase().includes(lowerSearchTerm) ||
+      post.summary.toLowerCase().includes(lowerSearchTerm) ||
+      (post.tags && post.tags.some(tag => tag.toLowerCase().includes(lowerSearchTerm))) ||
+      (showAuthor && post.author && post.author.toLowerCase().includes(lowerSearchTerm))
+    );
+  });
+
+
   return (
     <Card className="shadow-md">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-primary" /> {title}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
+      <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between">
+         <div className="flex-grow">
+            <CardTitle className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-primary" /> {title}
+            </CardTitle>
+            <CardDescription>{description}</CardDescription>
+         </div>
+         {showSearch && (
+             <div className="relative mt-4 md:mt-0 md:w-64">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                    type="search"
+                    placeholder="Rechercher par mot-clé, titre..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-8 h-9"
+                />
+            </div>
+         )}
       </CardHeader>
       <CardContent>
-        {posts.length > 0 ? (
+        {filteredPosts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {posts.map((post) => (
+            {filteredPosts.map((post) => (
               <Card key={post.id} className="flex flex-col overflow-hidden h-full">
                 {post.imageUrl && (
                    <div className="relative w-full h-40">
@@ -69,9 +101,13 @@ export default function BlogDisplay({
             ))}
           </div>
         ) : (
-          <p className="text-center text-muted-foreground">Aucun article disponible pour le moment.</p>
+          <p className="text-center text-muted-foreground pt-6">
+            {searchTerm ? `Aucun article trouvé pour "${searchTerm}".` : "Aucun article disponible pour le moment."}
+            </p>
         )}
       </CardContent>
     </Card>
   );
 }
+
+    

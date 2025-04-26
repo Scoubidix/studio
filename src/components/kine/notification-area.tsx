@@ -1,3 +1,4 @@
+
 // @refresh reset - Prevent error during compilation
 'use client';
 
@@ -5,7 +6,7 @@ import { useState } from 'react'; // Import useState
 import type { Feedback, MessageToKine, Patient } from '@/interfaces';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+// Removed Card imports
 import { Textarea } from '@/components/ui/textarea'; // Import Textarea
 import { AlertTriangle, MailWarning, CheckCircle, Send, Loader2 } from 'lucide-react'; // Import Send and Loader2
 import { format, formatDistanceToNow } from 'date-fns';
@@ -73,18 +74,13 @@ export default function NotificationArea({
   ].sort((a, b) => b.date.getTime() - a.date.getTime()); // Sort combined notifications by date
 
   if (allNotifications.length === 0) {
-    return null; // Don't render the card if there are no notifications
+    // This case should ideally be handled by the parent accordion not rendering the content
+    return <div className="p-6 text-center text-muted-foreground">Aucune notification.</div>;
   }
 
   return (
-    <Card className="shadow-md border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-900/20 mb-8">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg text-orange-700 dark:text-orange-300">
-          <AlertTriangle className="w-5 h-5" />
-          Notifications Importantes
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pt-0 space-y-4"> {/* Increased spacing */}
+    // Removed Card wrapper. The parent AccordionContent provides the container.
+    <div className="p-6 space-y-4"> {/* Added padding to the div */}
         {allNotifications.map((notification) => (
           <Alert
             key={`${notification.type}-${notification.id}`}
@@ -179,7 +175,8 @@ export default function NotificationArea({
 
           </Alert>
         ))}
-      </CardContent>
-    </Card>
+    </div>
   );
 }
+
+    
