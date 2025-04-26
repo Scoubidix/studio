@@ -1,24 +1,96 @@
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+'use client'; // Add this directive
+
+import { initializeApp, type FirebaseApp } from "firebase/app";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAnalytics, type Analytics } from "firebase/analytics"; // Import Analytics type
+import { redirect } from 'next/navigation';
+import { useEffect, useState } from 'react'; // Import useState
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA7Pesrain_yY_qodm727iJ1caN3VUSP78",
+  authDomain: "mon-assistant-kine-e26e0.firebaseapp.com",
+  projectId: "mon-assistant-kine-e26e0",
+  storageBucket: "mon-assistant-kine-e26e0.firebasestorage.app",
+  messagingSenderId: "673799271683",
+  appId: "1:673799271683:web:476c2b8a422c8140562536",
+  measurementId: "G-QYL4XG6DJB" // Optional: Only include if you use Analytics
+};
+
+let app: FirebaseApp;
+try {
+  app = initializeApp(firebaseConfig);
+} catch (error) {
+  console.error("Error initializing Firebase app:", error);
+  // Handle the error appropriately, maybe show an error message to the user
+  // For now, we'll proceed, but auth and other services might fail.
+}
+
+// Initialize auth immediately if app initialization succeeded
+const auth = app ? getAuth(app) : null;
+
 
 export default function Home() {
+  // Initialize analytics state to null
+  const [analytics, setAnalytics] = useState<Analytics | null>(null);
+
+  useEffect(() => {
+    // Initialize Analytics only on the client side
+    if (app && typeof window !== 'undefined') {
+        try {
+            const analyticsInstance = getAnalytics(app);
+            setAnalytics(analyticsInstance);
+        } catch(error) {
+            console.error("Error initializing Firebase Analytics:", error);
+        }
+    }
+
+    if (!auth) {
+        console.error("Firebase Auth not initialized. Redirecting to login.");
+        redirect('/login'); // Or handle the error differently
+        return;
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // TODO: Determine if user is kine or patient and redirect accordingly
+        // Check custom claims or Firestore data to determine role
+        console.log("User logged in, checking role...");
+        // Example (replace with your actual role check logic):
+        // Assume role is stored in Firestore 'users' collection doc(user.uid)
+        // getDoc(doc(firestore, 'users', user.uid)).then(docSnap => {
+        //   if (docSnap.exists()) {
+        //     const role = docSnap.data().role;
+        //     if (role === 'kine') {
+               redirect('/kine/dashboard');
+        //     } else if (role === 'patient') {
+        //        redirect('/patient/dashboard');
+        //     } else {
+        //        console.error("Unknown user role:", role);
+        //        redirect('/login'); // Redirect to login if role is unknown
+        //     }
+        //   } else {
+        //      console.error("User document not found in Firestore.");
+        //      redirect('/login'); // Redirect if user doc doesn't exist
+        //   }
+        // }).catch(error => {
+        //    console.error("Error fetching user role:", error);
+        //    redirect('/login');
+        // });
+
+      } else {
+        redirect('/login');
+      }
+    });
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []); // Empty dependency array ensures this runs only once on mount
+
+  // Render loading state or placeholder while checking auth
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-150px)] text-center">
-      <h1 className="text-4xl font-bold mb-4">Bienvenue sur Mon Assistant Kiné</h1>
-      <p className="text-lg text-muted-foreground mb-8">Votre plateforme de suivi patient personnalisée.</p>
-      {/* Placeholder links - Replace with actual auth flow later */}
-      <div className="space-x-4">
-         <Button asChild>
-           <Link href="/patient/dashboard">Accéder au Tableau de Bord Patient</Link>
-         </Button>
-         {/* Add Kine dashboard link */}
-         <Button variant="outline" asChild>
-           <Link href="/kine/dashboard">Accéder au Tableau de Bord Kiné</Link>
-         </Button>
+    <div className="flex min-h-screen flex-col items-center justify-center p-24">
+      <div>
+        Chargement...
       </div>
-      <p className="mt-10 text-sm text-muted-foreground">
-        (Ceci est une page d'accueil temporaire. L'authentification sera ajoutée ultérieurement.)
-      </p>
     </div>
   );
 }
