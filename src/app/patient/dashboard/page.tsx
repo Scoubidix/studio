@@ -193,7 +193,7 @@ export default function PatientDashboard() {
                     onClick={() => handleExerciseClick(progEx.exerciseDetails!)}
                     role="button"
                     tabIndex={0}
-                    aria-label={`Voir les détails de l'exercice ${progEx.exerciseDetails.nom}`}
+                    aria-label={`Voir les détails de l'exercice ${index + 1}: ${progEx.exerciseDetails.nom}`}
                     onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleExerciseClick(progEx.exerciseDetails!)}
                   >
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -212,7 +212,7 @@ export default function PatientDashboard() {
                       )}
                        <div className={`p-4 ${progEx.exerciseDetails.image_url ? 'md:col-span-2' : 'md:col-span-3'} relative`}>
                         <div className="flex justify-between items-start mb-2">
-                            <h3 className="text-lg font-semibold">{progEx.exerciseDetails.nom}</h3>
+                            <h3 className="text-lg font-semibold">{index + 1}. {progEx.exerciseDetails.nom}</h3>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground capitalize">
                                 {getCategoryIcon(progEx.exerciseDetails.catégorie)}
                                 {progEx.exerciseDetails.catégorie}
