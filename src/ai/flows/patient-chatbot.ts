@@ -20,7 +20,7 @@ const PatientContextSchema = z.object({
   id: z.string().describe('The unique identifier of the patient.'),
   name: z.string().describe('The first name of the patient.'),
   condition: z.string().describe('The primary medical condition being treated.'),
-  goals: z.string().describe('The patient\'s stated goals for physiotherapy.'),
+  goals: z.string().describe('The patient\'s stated goals for physiotherapy.'), // Renamed from objectifs to goals for consistency in prompt
   currentProgramSummary: z.string().describe('A brief summary of the current exercise program.'),
   recentFeedbackSummary: z.string().optional().describe('A summary of the patient\'s recent feedback (pain, difficulty).'),
 }).describe('Contextual information about the specific patient.');
@@ -147,6 +147,3 @@ async (input) => {
       escalationReason: output.escalationReason,
   };
 });
-
-// Ensure only the async wrapper function and types are exported
-// export { PersonalizedPatientChatbotInput, PersonalizedPatientChatbotOutput };

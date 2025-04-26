@@ -30,6 +30,7 @@ const mockPatientData: Patient = {
   pathologies: ['Lombalgie chronique', 'Tendinopathie épaule droite'],
   remarques: 'Motivé mais craint la douleur.',
   kine_id: 'kineTest1',
+  objectifs: ['Amélioration de la mobilité lombaire', 'Reprise progressive de la course à pied'], // Objectives for mock patient
 };
 
 const mockPhysioKnowledge = {
@@ -120,7 +121,7 @@ export default function PatientChatbotPopup() {
           id: mockPatientData.id,
           name: mockPatientData.prénom,
           condition: mockPatientData.pathologies.join(', '),
-          goals: "Améliorer la mobilité et réduire la douleur lombaire.", // Example goal
+          goals: mockPatientData.objectifs.join(', '), // Use patient objectives
           currentProgramSummary: "Programme axé renforcement dos/abdos et mobilité épaule.", // Example summary
           // recentFeedbackSummary: "Douleur modérée (5/10) rapportée hier.", // Example feedback summary
         },

@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Program, Exercise, ProgramExercise, Feedback } from "@/interfaces";
+import { Program, Exercise, ProgramExercise, Feedback, Patient } from "@/interfaces"; // Import Patient
 import FeedbackForm from '@/components/patient/feedback-form';
 import PatientChatbotPopup from '@/components/patient/patient-chatbot'; // Import the new popup component
 import ExerciseDetailModal from '@/components/patient/exercise-detail-modal'; // Import the new detail modal
 import Image from 'next/image';
-import { Dumbbell, Activity, StretchVertical, Trophy, CalendarDays, ArrowRight } from 'lucide-react';
+import { Dumbbell, Activity, StretchVertical, Trophy, CalendarDays, ArrowRight, Target } from 'lucide-react'; // Added Target icon
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale'; // Import French locale
 
@@ -82,6 +82,19 @@ const mockProgram: Program = {
   date_creation: new Date().toISOString(),
 };
 
+// Update mock patient data to include objectifs
+const mockPatientData: Patient = {
+  id: 'patientTest',
+  nom: 'Dupont',
+  prénom: 'Jean',
+  date_naissance: '1985-03-15',
+  pathologies: ['Lombalgie chronique', 'Tendinopathie épaule droite'],
+  remarques: 'Motivé mais craint la douleur.',
+  kine_id: 'kineTest1',
+  objectifs: ['Amélioration de la mobilité lombaire', 'Reprise progressive de la course à pied'], // Added objectives
+};
+
+
 // Helper to get exercise details
 const getExerciseDetails = (exerciseId: string): Exercise | undefined => {
   return mockExercises.find(ex => ex.id === exerciseId);
@@ -122,8 +135,9 @@ export default function PatientDashboard() {
   const [totalSessions, setTotalSessions] = useState(0); // Example: track total feedback submissions
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [patientGoals, setPatientGoals] = useState<string[]>([]); // State for goals
 
-  // Set date and initial quote on mount
+  // Set date, initial quote, and patient goals on mount
   useEffect(() => {
     const today = new Date();
     setCurrentDate(format(today, "EEEE d MMMM yyyy", { locale: fr }));
@@ -133,6 +147,9 @@ export default function PatientDashboard() {
     // Example initialization
     setSessionStreak(3); // Replace with actual data
     setTotalSessions(15); // Replace with actual data
+
+    // TODO: Fetch actual patient goals from data source
+    setPatientGoals(mockPatientData.objectifs); // Use mock data for now
   }, []);
 
   // Function to update gamification state when feedback is submitted
@@ -157,16 +174,28 @@ export default function PatientDashboard() {
   return (
     <div className="space-y-8">
        {/* Header Section */}
-      <div className="flex justify-between items-center mb-6 p-4 bg-card rounded-lg shadow-sm border">
-           <div>
+      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6 p-4 bg-card rounded-lg shadow-sm border">
+           {/* Left Side: Date, Quote, Goals */}
+           <div className="space-y-2">
                <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
                    <CalendarDays className="w-5 h-5 text-primary"/>
                    <span className="capitalize">{currentDate}</span>
                </div>
-               <p className="text-sm text-muted-foreground italic mt-1">"{motivationalQuote}"</p>
+               <p className="text-sm text-muted-foreground italic">"{motivationalQuote}"</p>
+               {/* Patient Goals Section */}
+               {patientGoals.length > 0 && (
+                  <div className="flex items-start gap-2 text-sm text-muted-foreground pt-1">
+                       <Target className="w-4 h-4 mt-0.5 text-accent flex-shrink-0"/>
+                       <div>
+                          <span className="font-medium text-foreground/90">Vos objectifs :</span>{' '}
+                          {patientGoals.join(', ')}
+                       </div>
+                  </div>
+               )}
            </div>
-            {/* Gamification Display */}
-            <div className="text-right">
+
+           {/* Right Side: Gamification */}
+            <div className="text-right flex-shrink-0">
                  <div className="flex items-center gap-2 justify-end">
                     <Trophy className="w-5 h-5 text-yellow-500" />
                     <span className="font-semibold">{sessionStreak}</span>

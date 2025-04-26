@@ -46,6 +46,7 @@ export interface Patient {
   pathologies: string[];
   remarques: string;
   kine_id: string; // Reference to Kine
+  objectifs: string[]; // Added patient goals
 }
 
 // Represents a message that can be sent to the Kiné
