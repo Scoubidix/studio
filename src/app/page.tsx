@@ -11,10 +11,10 @@ export default function Home() {
          <Button asChild>
            <Link href="/patient/dashboard">Accéder au Tableau de Bord Patient</Link>
          </Button>
-         {/* Add Kine dashboard link later */}
-         {/* <Button variant="outline" asChild>
+         {/* Add Kine dashboard link */}
+         <Button variant="outline" asChild>
            <Link href="/kine/dashboard">Accéder au Tableau de Bord Kiné</Link>
-         </Button> */}
+         </Button>
       </div>
       <p className="mt-10 text-sm text-muted-foreground">
         (Ceci est une page d'accueil temporaire. L'authentification sera ajoutée ultérieurement.)

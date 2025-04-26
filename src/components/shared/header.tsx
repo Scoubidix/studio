@@ -9,11 +9,14 @@ export default function Header() {
           <Stethoscope className="w-6 h-6" />
           <h1 className="text-xl font-semibold">Mon Assistant Kiné</h1>
         </Link>
-        <nav>
+        <nav className="flex gap-4">
           {/* Add navigation links here if needed, e.g., Login/Logout */}
-           {/* For now, link directly to patient dashboard for testing */}
+           {/* For now, link directly to dashboards for testing */}
            <Link href="/patient/dashboard" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-             Tableau de bord Patient (Test)
+             Patient (Test)
+           </Link>
+            <Link href="/kine/dashboard" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+             Kiné (Test)
            </Link>
         </nav>
       </div>

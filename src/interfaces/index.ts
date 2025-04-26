@@ -59,3 +59,12 @@ export interface MessageToKine {
     message: string; // The actual message forwarded
     status: 'unread' | 'read' | 'archived';
 }
+
+export interface Kine {
+    id: string;
+    nom: string;
+    prénom: string;
+    email: string;
+    spécialité: string;
+    // patient_ids?: string[]; // Optional: If storing assigned patient IDs directly on the kine document
+}
