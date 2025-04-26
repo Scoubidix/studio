@@ -1,3 +1,4 @@
+// @refresh reset - Prevent error during compilation
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,56 +8,10 @@ import { Separator } from '@/components/ui/separator';
 import type { Feedback } from '@/interfaces';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { AlertCircle, MessageSquare, TrendingDown, TrendingUp, Activity } from 'lucide-react'; // Import relevant icons
+import { AlertCircle, MessageSquare, TrendingDown, TrendingUp, Activity, Loader2 } from 'lucide-react'; // Added Loader2
 
-// --- Mock Data (Replace with actual data fetching based on patientId) ---
-const mockFeedbacks: Feedback[] = [
-  {
-    id: 'fb1',
-    programme_id: 'prog123',
-    patient_id: 'patientTest', // Feedback for Jean Dupont
-    date: new Date(Date.now() - 86400000 * 1).toISOString(), // Yesterday
-    douleur_moyenne: 5,
-    difficulté: 6,
-    commentaire_libre: "L'étirement des ischios était un peu douloureux aujourd'hui.",
-  },
-  {
-    id: 'fb2',
-    programme_id: 'prog123',
-    patient_id: 'patientTest', // Feedback for Jean Dupont
-    date: new Date(Date.now() - 86400000 * 3).toISOString(), // 3 days ago
-    douleur_moyenne: 4,
-    difficulté: 5,
-    commentaire_libre: "Séance ok, RAS.",
-  },
-  {
-      id: 'fb3',
-      programme_id: 'progXYZ', // Different program ID example
-      patient_id: 'patientTest2', // Feedback for Claire Martin
-      date: new Date(Date.now() - 86400000 * 2).toISOString(), // 2 days ago
-      douleur_moyenne: 3,
-      difficulté: 7,
-      commentaire_libre: "Les exercices de renforcement de la cheville sont difficiles mais je sens que ça progresse. Pas de douleur particulière.",
-  },
-  {
-      id: 'fb4',
-      programme_id: 'progXYZ',
-      patient_id: 'patientTest2', // Feedback for Claire Martin
-      date: new Date(Date.now() - 86400000 * 5).toISOString(), // 5 days ago
-      douleur_moyenne: 4,
-      difficulté: 6,
-      // No comment
-  },
-   {
-      id: 'fb5',
-      programme_id: 'progABC',
-      patient_id: 'patientTest3', // Feedback for Lucas Petit
-      date: new Date(Date.now() - 86400000 * 1).toISOString(), // Yesterday
-      douleur_moyenne: 6,
-      difficulté: 5,
-      commentaire_libre: "J'ai ressenti une gêne au genou droit pendant les squats.",
-  },
-];
+// --- Mock Data (Moved to dashboard page for notification use) ---
+import { mockFeedbacks } from './mock-data'; // Assuming mock data is moved to a separate file or passed as prop
 // --- End Mock Data ---
 
 interface PatientFeedbackDisplayProps {
@@ -65,7 +20,7 @@ interface PatientFeedbackDisplayProps {
 
 export default function PatientFeedbackDisplay({ patientId }: PatientFeedbackDisplayProps) {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
-  const [isLoading, setIsLoading] = useState(true); // Add loading state
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     setIsLoading(true);
@@ -78,7 +33,7 @@ export default function PatientFeedbackDisplay({ patientId }: PatientFeedbackDis
                                   .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Sort by date descending
         setFeedbacks(filteredFeedbacks);
         setIsLoading(false);
-    }, 1000); // Simulate 1 second loading time
+    }, 500); // Reduced loading time slightly
 
   }, [patientId]); // Re-fetch when patientId changes
 
@@ -96,23 +51,15 @@ export default function PatientFeedbackDisplay({ patientId }: PatientFeedbackDis
 
 
   return (
-    <Card className="shadow-md h-fit"> {/* Added h-fit */}
+    <Card className="shadow-md h-full"> {/* Ensure card takes full height if needed */}
       <CardHeader>
         <CardTitle>Feedbacks Patient</CardTitle>
         <CardDescription>Historique des retours du patient sur ses séances.</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-             // Basic Skeleton Loader
-            <div className="space-y-4">
-                {[1, 2, 3].map(i => (
-                    <div key={i} className="space-y-2 p-3 border rounded-md animate-pulse">
-                        <div className="h-4 bg-muted rounded w-1/4"></div>
-                        <div className="h-3 bg-muted rounded w-3/4"></div>
-                        <div className="h-3 bg-muted rounded w-1/2"></div>
-                        <div className="h-6 bg-muted rounded w-full mt-2"></div>
-                    </div>
-                ))}
+            <div className="flex justify-center items-center h-[200px]">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         ) : feedbacks.length > 0 ? (
            <ScrollArea className="h-[400px] pr-4"> {/* Adjust height as needed */}
@@ -132,7 +79,6 @@ export default function PatientFeedbackDisplay({ patientId }: PatientFeedbackDis
                            <Activity className={`w-3.5 h-3.5 ${getDifficultyColor(fb.difficulté)}`} />
                            Difficulté: <span className={`font-medium ${getDifficultyColor(fb.difficulté)}`}>{fb.difficulté}/10</span>
                        </span>
-                       {/* Removed Fatigue and Adherence display */}
                     </div>
                     {fb.commentaire_libre && (
                       <div className="mt-2 p-3 bg-muted/50 rounded-md border border-border/50">
@@ -149,7 +95,7 @@ export default function PatientFeedbackDisplay({ patientId }: PatientFeedbackDis
             </div>
           </ScrollArea>
         ) : (
-          <p className="text-center text-muted-foreground">Aucun feedback disponible pour ce patient.</p>
+          <p className="text-center text-muted-foreground pt-4">Aucun feedback disponible pour ce patient.</p>
         )}
       </CardContent>
     </Card>

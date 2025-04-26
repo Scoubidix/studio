@@ -1,3 +1,4 @@
+// @refresh reset - Prevent error during compilation
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,13 +16,12 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+// Removed Card imports as it's no longer used as the main wrapper
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from 'react';
 import type { Patient } from '@/interfaces';
-import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, CalendarIcon } from 'lucide-react'; // Added CalendarIcon back
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -133,12 +133,8 @@ export default function PatientInfoForm({ patient }: PatientInfoFormProps) {
   }
 
   return (
-    <Card className="shadow-md h-fit"> {/* Added h-fit */}
-      <CardHeader>
-        <CardTitle>Informations Patient & Bilan</CardTitle>
-        <CardDescription>Modifiez les détails et objectifs du patient sélectionné. Ces informations aideront à générer le programme.</CardDescription>
-      </CardHeader>
-      <CardContent>
+    // Removed the Card component wrapper here
+      <div className="p-6"> {/* Added padding that was previously on CardContent */}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -328,7 +324,6 @@ export default function PatientInfoForm({ patient }: PatientInfoFormProps) {
             </Button>
           </form>
         </Form>
-      </CardContent>
-    </Card>
+      </div>
   );
 }
