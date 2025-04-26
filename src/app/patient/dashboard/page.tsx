@@ -1,11 +1,16 @@
+'use client'; // Need client component for state, effects, event handlers
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Program, Exercise, ProgramExercise } from "@/interfaces"; // Assuming interfaces are defined
+import { Program, Exercise, ProgramExercise, Feedback } from "@/interfaces";
 import FeedbackForm from '@/components/patient/feedback-form';
-import PatientChatbot from '@/components/patient/patient-chatbot';
+import PatientChatbotPopup from '@/components/patient/patient-chatbot'; // Import the new popup component
 import Image from 'next/image';
-import { Dumbbell, Activity, StretchVertical } from 'lucide-react';
+import { Dumbbell, Activity, StretchVertical, Trophy, CalendarDays } from 'lucide-react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale'; // Import French locale
 
 // --- Mock Data (Replace with actual data fetching later) ---
 const mockExercises: Exercise[] = [
@@ -19,10 +24,10 @@ const mockProgram: Program = {
   id: 'prog123',
   patient_id: 'patientTest',
   liste_exercices: [
-    { exercice_id: 'ex1', séries: 3, répétitions: 12, fréquence: '3 fois/semaine' },
-    { exercice_id: 'ex2', séries: 2, répétitions: 30, fréquence: 'Tous les jours (secondes)' }, // Indicate hold time for stretches
-    { exercice_id: 'ex3', séries: 3, répétitions: 10, fréquence: 'Tous les jours' },
-    { exercice_id: 'ex4', séries: 3, répétitions: 15, fréquence: '3 fois/semaine' },
+    { exercice_id: 'ex1', séries: 3, répétitions: 12 }, // Frequency removed
+    { exercice_id: 'ex2', séries: 2, répétitions: 30 }, // Frequency removed, indicate hold time for stretches implicitly by category
+    { exercice_id: 'ex3', séries: 3, répétitions: 10 }, // Frequency removed
+    { exercice_id: 'ex4', séries: 3, répétitions: 15 }, // Frequency removed
   ],
   statut: 'actif',
   date_creation: new Date().toISOString(),
@@ -38,6 +43,18 @@ const populatedProgramExercises: ProgramExercise[] = mockProgram.liste_exercices
   ...progEx,
   exerciseDetails: getExerciseDetails(progEx.exercice_id),
 }));
+
+// Motivational Quotes
+const motivationalQuotes = [
+    "Chaque petit pas compte. Continuez d'avancer !",
+    "La persévérance est la clé de la réussite.",
+    "Votre corps est capable de grandes choses. Croyez en vous !",
+    "La douleur d'aujourd'hui est la force de demain.",
+    "Soyez patient et constant, les résultats viendront.",
+    "N'abandonnez jamais. Les grands accomplissements prennent du temps.",
+    "Félicitations pour votre engagement envers votre santé !",
+];
+
 // --- End Mock Data ---
 
 const getCategoryIcon = (category: Exercise['catégorie']) => {
@@ -50,11 +67,58 @@ const getCategoryIcon = (category: Exercise['catégorie']) => {
 };
 
 export default function PatientDashboard() {
-  // TODO: Replace with actual data fetching logic (e.g., using useEffect and API calls)
+  const [currentDate, setCurrentDate] = useState('');
+  const [motivationalQuote, setMotivationalQuote] = useState('');
+  const [sessionStreak, setSessionStreak] = useState(0); // Example: track consecutive days with feedback
+  const [totalSessions, setTotalSessions] = useState(0); // Example: track total feedback submissions
+
+  // Set date and initial quote on mount
+  useEffect(() => {
+    const today = new Date();
+    setCurrentDate(format(today, "EEEE d MMMM yyyy", { locale: fr }));
+    setMotivationalQuote(motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]);
+
+    // TODO: Fetch actual streak and total sessions from user data/feedback history
+    // Example initialization
+    setSessionStreak(3); // Replace with actual data
+    setTotalSessions(15); // Replace with actual data
+  }, []);
+
+  // Function to update gamification state when feedback is submitted
+  const handleFeedbackSubmitted = () => {
+    // TODO: Implement logic to check if feedback is for today, update streak, etc.
+    // This is a simplified mock update
+    setSessionStreak(prev => prev + 1);
+    setTotalSessions(prev => prev + 1);
+    // Potentially show a congratulatory toast or update UI element
+    console.log("Gamification state updated (simulated)");
+    // Select a new quote after feedback submission
+    setMotivationalQuote(motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]);
+  };
+
+  // TODO: Replace with actual data fetching logic for program, exercises, feedback history
 
   return (
     <div className="space-y-8">
-      <h1 className="text-3xl font-bold">Tableau de Bord Patient</h1>
+       {/* Header Section */}
+      <div className="flex justify-between items-center mb-6 p-4 bg-card rounded-lg shadow-sm border">
+           <div>
+               <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                   <CalendarDays className="w-5 h-5 text-primary"/>
+                   <span className="capitalize">{currentDate}</span>
+               </div>
+               <p className="text-sm text-muted-foreground italic mt-1">"{motivationalQuote}"</p>
+           </div>
+            {/* Gamification Display */}
+            <div className="text-right">
+                 <div className="flex items-center gap-2 justify-end">
+                    <Trophy className="w-5 h-5 text-yellow-500" />
+                    <span className="font-semibold">{sessionStreak}</span>
+                    <span className="text-sm text-muted-foreground">jours de suite</span>
+                 </div>
+                 <p className="text-xs text-muted-foreground mt-1">{totalSessions} séances complétées au total</p>
+            </div>
+      </div>
 
       {/* Exercise Program Section */}
       <Card className="shadow-md">
@@ -92,10 +156,10 @@ export default function PatientDashboard() {
                         </div>
 
                         <p className="text-sm text-muted-foreground mb-3">{progEx.exerciseDetails.description}</p>
-                        <div className="flex flex-wrap gap-4 text-sm">
+                        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
                           <span className="font-medium">Séries: <span className="font-normal">{progEx.séries}</span></span>
                           <span className="font-medium">Répétitions: <span className="font-normal">{progEx.répétitions} {progEx.exerciseDetails.catégorie === 'étirement' ? 'sec' : ''}</span></span>
-                          <span className="font-medium">Fréquence: <span className="font-normal">{progEx.fréquence}</span></span>
+                          {/* Frequency removed */}
                            <span className="font-medium capitalize">Niveau: <span className="font-normal">{progEx.exerciseDetails.niveau}</span></span>
                         </div>
                         {progEx.exerciseDetails.contre_indications && progEx.exerciseDetails.contre_indications.length > 0 && (
@@ -117,11 +181,16 @@ export default function PatientDashboard() {
       </Card>
 
        {/* Feedback Section */}
-      <FeedbackForm programId={mockProgram.id} patientId={mockProgram.patient_id} />
+      <FeedbackForm
+        programId={mockProgram.id}
+        patientId={mockProgram.patient_id}
+        onFeedbackSubmitted={handleFeedbackSubmitted} // Pass the handler
+        />
 
 
-      {/* Patient Chatbot Section */}
-      <PatientChatbot />
+      {/* Patient Chatbot Popup Trigger (The actual popup is managed inside the component) */}
+      <PatientChatbotPopup />
+
 
       {/* Session History Section (Placeholder) */}
       <Card className="shadow-md">
@@ -131,7 +200,7 @@ export default function PatientDashboard() {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">L'historique des feedbacks sera disponible bientôt.</p>
-          {/* TODO: Implement feedback history display */}
+          {/* TODO: Implement feedback history display, potentially showing streak info */}
         </CardContent>
       </Card>
     </div>

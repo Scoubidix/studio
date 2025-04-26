@@ -4,7 +4,17 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 export default function LoadingPatientDashboard() {
   return (
     <div className="space-y-8">
-      <Skeleton className="h-9 w-1/3" /> {/* Title skeleton */}
+       {/* Header Skeleton */}
+       <div className="flex justify-between items-center mb-6 p-4 bg-card rounded-lg shadow-sm border">
+           <div>
+               <Skeleton className="h-6 w-48 mb-2" /> {/* Date skeleton */}
+               <Skeleton className="h-4 w-64" /> {/* Quote skeleton */}
+           </div>
+            <div className="text-right">
+                 <Skeleton className="h-5 w-24 mb-1" /> {/* Gamification line 1 */}
+                 <Skeleton className="h-3 w-32" /> {/* Gamification line 2 */}
+            </div>
+       </div>
 
       {/* Exercise Program Skeleton */}
       <Card className="shadow-md">
@@ -21,12 +31,12 @@ export default function LoadingPatientDashboard() {
                     <div className="p-4 md:col-span-2 space-y-3">
                        <Skeleton className="h-5 w-3/4" /> {/* Exercise name */}
                        <Skeleton className="h-4 w-full" /> {/* Description */}
-                       <Skeleton className="h-4 w-1/2" /> {/* Details */}
-                       <Skeleton className="h-4 w-2/3" /> {/* Details */}
+                       <Skeleton className="h-4 w-1/2" /> {/* Details (Series/Reps) */}
+                       <Skeleton className="h-4 w-1/3" /> {/* Details (Level) */}
                     </div>
                  </div>
                </Card>
-              {i < 3 && <Skeleton className="h-px w-full my-6" />} {/* Separator */}
+              {i < 3 && <Skeleton className="h-px w-full my-6 bg-border/50" />} {/* Separator */}
             </div>
           ))}
         </CardContent>
@@ -39,32 +49,22 @@ export default function LoadingPatientDashboard() {
            <Skeleton className="h-4 w-1/2" /> {/* Card description */}
          </CardHeader>
          <CardContent className="space-y-8">
-            <Skeleton className="h-5 w-1/4" /> {/* Label */}
-            <Skeleton className="h-10 w-full" /> {/* Slider/Input */}
-            <Skeleton className="h-5 w-1/4" /> {/* Label */}
-            <Skeleton className="h-10 w-full" /> {/* Slider/Input */}
-             <Skeleton className="h-5 w-1/4" /> {/* Label */}
-            <Skeleton className="h-10 w-full" /> {/* Slider/Input */}
-            <Skeleton className="h-5 w-1/4" /> {/* Label */}
+            <Skeleton className="h-5 w-1/4 mb-1" /> {/* Label */}
+            <Skeleton className="h-10 w-full" /> {/* Slider/Input (Pain) */}
+
+            <Skeleton className="h-5 w-1/4 mb-1" /> {/* Label */}
+            <Skeleton className="h-10 w-full" /> {/* Slider/Input (Difficulty) */}
+
+            {/* Fatigue Skeleton - REMOVED */}
+            {/* Adherence Skeleton - REMOVED */}
+
+            <Skeleton className="h-5 w-1/4 mb-1" /> {/* Label */}
             <Skeleton className="h-20 w-full" /> {/* Textarea */}
             <Skeleton className="h-10 w-32" /> {/* Button */}
          </CardContent>
        </Card>
 
-      {/* Chatbot Skeleton */}
-       <Card className="shadow-md">
-         <CardHeader>
-           <Skeleton className="h-6 w-1/3 mb-2" /> {/* Card title */}
-           <Skeleton className="h-4 w-1/2" /> {/* Card description */}
-         </CardHeader>
-         <CardContent className="flex flex-col h-[500px]">
-           <Skeleton className="flex-grow border rounded-md p-4 mb-4" /> {/* Chat area */}
-           <div className="flex gap-2">
-             <Skeleton className="h-10 flex-grow" /> {/* Input */}
-             <Skeleton className="h-10 w-24" /> {/* Button */}
-           </div>
-         </CardContent>
-       </Card>
+      {/* Chatbot Skeleton - REMOVED (Now a popup) */}
 
       {/* History Skeleton */}
       <Card className="shadow-md">

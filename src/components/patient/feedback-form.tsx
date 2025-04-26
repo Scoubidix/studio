@@ -24,10 +24,10 @@ import { Loader2 } from 'lucide-react';
 
 // --- Schema Definition ---
 const feedbackFormSchema = z.object({
-  douleur_moyenne: z.number().min(0).max(10),
-  difficulté: z.number().min(0).max(10),
-  fatigue: z.number().min(0).max(10),
-  adherence: z.number().min(0).max(100),
+  douleur_moyenne: z.number().min(0).max(10).default(0),
+  difficulté: z.number().min(0).max(10).default(0),
+  // fatigue removed
+  // adherence removed
   commentaire_libre: z.string().max(500, "Le commentaire ne doit pas dépasser 500 caractères.").optional(),
 });
 
@@ -36,10 +36,11 @@ type FeedbackFormData = z.infer<typeof feedbackFormSchema>;
 interface FeedbackFormProps {
   programId: string;
   patientId: string;
+  onFeedbackSubmitted?: () => void; // Callback for gamification trigger
   // onSubmit: (feedback: Feedback) => Promise<void>; // Add actual submit handler later
 }
 
-export default function FeedbackForm({ programId, patientId }: FeedbackFormProps) {
+export default function FeedbackForm({ programId, patientId, onFeedbackSubmitted }: FeedbackFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -48,8 +49,6 @@ export default function FeedbackForm({ programId, patientId }: FeedbackFormProps
     defaultValues: {
       douleur_moyenne: 0,
       difficulté: 0,
-      fatigue: 0,
-      adherence: 50, // Default adherence
       commentaire_libre: '',
     },
   });
@@ -59,11 +58,15 @@ export default function FeedbackForm({ programId, patientId }: FeedbackFormProps
      setIsSubmitting(true);
     console.log('Submitting feedback:', values);
 
-    const feedbackData: Feedback = {
-        ...values,
+    // Construct feedback data based on the updated schema
+    const feedbackData: Omit<Feedback, 'id'> = { // Use Omit because ID is generated on save
         programme_id: programId,
         patient_id: patientId,
         date: new Date().toISOString(),
+        douleur_moyenne: values.douleur_moyenne,
+        difficulté: values.difficulté,
+        // fatigue and adherence are no longer included
+        ...(values.commentaire_libre && { commentaire_libre: values.commentaire_libre }), // Only include if provided
     };
 
      // Simulate API call delay
@@ -78,6 +81,7 @@ export default function FeedbackForm({ programId, patientId }: FeedbackFormProps
            variant: "default", // Use accent color via theme
          });
          form.reset(); // Reset form after successful submission
+         onFeedbackSubmitted?.(); // Trigger gamification update
      // } catch (error) {
      //   console.error("Error submitting feedback:", error);
      //   toast({
@@ -153,59 +157,9 @@ export default function FeedbackForm({ programId, patientId }: FeedbackFormProps
               )}
             />
 
-             {/* Fatigue Level */}
-             <FormField
-              control={form.control}
-              name="fatigue"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Niveau de fatigue après la séance (0 = pas fatigué, 10 = épuisé)</FormLabel>
-                   <FormControl>
-                       <div className="flex items-center gap-4">
-                         <Slider
-                           min={0}
-                           max={10}
-                           step={1}
-                           value={[field.value]}
-                           onValueChange={(value) => field.onChange(value[0])}
-                           className="w-full"
-                           aria-label="Niveau de fatigue après la séance"
-                          />
-                           <span className="font-semibold w-8 text-center">{field.value}</span>
-                       </div>
-                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+             {/* Fatigue Level - REMOVED */}
 
-            {/* Adherence Level */}
-             <FormField
-              control={form.control}
-              name="adherence"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Adhérence au programme (%)</FormLabel>
-                   <FormControl>
-                       <div className="flex items-center gap-4">
-                         <Slider
-                           min={0}
-                           max={100}
-                           step={5}
-                           value={[field.value]}
-                           onValueChange={(value) => field.onChange(value[0])}
-                           className="w-full"
-                           aria-label="Adhérence au programme"
-                          />
-                           <span className="font-semibold w-10 text-center">{field.value}%</span>
-                       </div>
-                   </FormControl>
-                    <FormDescription>Quel pourcentage du programme avez-vous pu réaliser ?</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+            {/* Adherence Level - REMOVED */}
 
             {/* Free Comment */}
             <FormField
@@ -222,6 +176,7 @@ export default function FeedbackForm({ programId, patientId }: FeedbackFormProps
                       rows={4}
                     />
                   </FormControl>
+                   <FormDescription>Des informations sur un exercice spécifique ? Une gêne particulière ?</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

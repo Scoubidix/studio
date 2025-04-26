@@ -13,7 +13,7 @@ export interface ProgramExercise {
   exercice_id: string;
   séries: number;
   répétitions: number;
-  fréquence: string; // e.g., "3 fois par semaine", "Tous les jours"
+  // fréquence removed
   exerciseDetails?: Exercise; // Optional: populated when fetching full program details
 }
 
@@ -32,9 +32,9 @@ export interface Feedback {
     date: string; // Consider Date or Timestamp
     douleur_moyenne: number;
     difficulté: number;
-    fatigue: number;
-    adherence: number;
-    commentaire_libre: string;
+    // fatigue removed
+    // adherence removed
+    commentaire_libre?: string; // Made optional as per original schema usage
 }
 
 export interface Patient {
@@ -45,4 +45,15 @@ export interface Patient {
   pathologies: string[];
   remarques: string;
   kine_id: string; // Reference to Kine
+}
+
+// Represents a message that can be sent to the Kiné
+export interface MessageToKine {
+    id?: string;
+    patient_id: string;
+    timestamp: string; // ISO date string
+    original_question: string;
+    chatbot_response?: string; // Optional: what the chatbot said
+    message: string; // The actual message forwarded
+    status: 'unread' | 'read' | 'archived';
 }
