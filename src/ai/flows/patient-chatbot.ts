@@ -33,21 +33,23 @@ const PhysiotherapyKnowledgeSchema = z.object({
 // --- End Mock Data Structures ---
 
 
-export const PersonalizedPatientChatbotInputSchema = z.object({
+// Input schema (not exported directly)
+const PersonalizedPatientChatbotInputSchema = z.object({
   question: z.string().describe('The question asked by the patient.'),
   patientContext: PatientContextSchema.describe('Information specific to the patient asking the question.'),
   physiotherapyKnowledge: PhysiotherapyKnowledgeSchema.describe('General physiotherapy knowledge base.'),
 });
 export type PersonalizedPatientChatbotInput = z.infer<typeof PersonalizedPatientChatbotInputSchema>;
 
-export const PersonalizedPatientChatbotOutputSchema = z.object({
+// Output schema (not exported directly)
+const PersonalizedPatientChatbotOutputSchema = z.object({
   canAnswer: z.boolean().describe('Indicates if the chatbot can provide a direct answer based on its knowledge and the patient context.'),
   answer: z.string().optional().describe('The chatbot\'s answer to the patient\'s question. Provided only if canAnswer is true.'),
   escalationReason: z.string().optional().describe('The reason why the chatbot cannot answer and escalation is suggested. Provided only if canAnswer is false.'),
 });
 export type PersonalizedPatientChatbotOutput = z.infer<typeof PersonalizedPatientChatbotOutputSchema>;
 
-// Exported wrapper function
+// Exported wrapper function (async function)
 export async function personalizedPatientChatbot(input: PersonalizedPatientChatbotInput): Promise<PersonalizedPatientChatbotOutput> {
   return personalizedPatientChatbotFlow(input);
 }
@@ -129,11 +131,22 @@ async (input) => {
   if (!output) {
     // Handle cases where the prompt fails unexpectedly
     console.error("Personalized chatbot prompt failed to return output.");
+    // Ensure the returned object matches the output schema
     return {
       canAnswer: false,
       escalationReason: "An internal error occurred while processing your request.",
+      // Ensure all required fields are present, even if optional ones are missing
+      answer: undefined,
     };
   }
 
-  return output;
+  // Ensure the returned object fully matches the output schema
+  return {
+      canAnswer: output.canAnswer,
+      answer: output.answer,
+      escalationReason: output.escalationReason,
+  };
 });
+
+// Ensure only the async wrapper function and types are exported
+// export { PersonalizedPatientChatbotInput, PersonalizedPatientChatbotOutput };
