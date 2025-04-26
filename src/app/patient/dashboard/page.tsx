@@ -7,29 +7,76 @@ import { Separator } from "@/components/ui/separator";
 import { Program, Exercise, ProgramExercise, Feedback } from "@/interfaces";
 import FeedbackForm from '@/components/patient/feedback-form';
 import PatientChatbotPopup from '@/components/patient/patient-chatbot'; // Import the new popup component
+import ExerciseDetailModal from '@/components/patient/exercise-detail-modal'; // Import the new detail modal
 import Image from 'next/image';
-import { Dumbbell, Activity, StretchVertical, Trophy, CalendarDays } from 'lucide-react';
+import { Dumbbell, Activity, StretchVertical, Trophy, CalendarDays, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale'; // Import French locale
 
 // --- Mock Data (Replace with actual data fetching later) ---
 const mockExercises: Exercise[] = [
-  { id: 'ex1', nom: 'Squat', description: 'Flexion des genoux et des hanches.', niveau: 'débutant', catégorie: 'renforcement', image_url: 'https://picsum.photos/seed/squat/300/200' },
-  { id: 'ex2', nom: 'Étirement Ischio-jambiers', description: 'Étirement des muscles postérieurs de la cuisse.', niveau: 'intermédiaire', catégorie: 'étirement', image_url: 'https://picsum.photos/seed/hamstring/300/200' },
-  { id: 'ex3', nom: 'Rotation Tronc Assis', description: 'Mobilisation de la colonne vertébrale en rotation.', niveau: 'débutant', catégorie: 'mobilité', image_url: 'https://picsum.photos/seed/rotation/300/200' },
-  // Removed ex4 (Pont Fessier)
-  // { id: 'ex4', nom: 'Pont Fessier', description: 'Renforcement des fessiers et du bas du dos.', niveau: 'intermédiaire', catégorie: 'renforcement', image_url: 'https://picsum.photos/seed/bridge/300/200' },
+  {
+    id: 'ex1',
+    nom: 'Squat',
+    description: 'Flexion des genoux et des hanches pour renforcer les cuisses et les fessiers.',
+    detailed_steps: [
+        "Tenez-vous debout, pieds écartés à la largeur des épaules, pointes légèrement vers l'extérieur.",
+        "Gardez le dos droit, la poitrine haute et le regard devant vous.",
+        "Descendez comme si vous alliez vous asseoir sur une chaise, en poussant les hanches vers l'arrière.",
+        "Les genoux doivent suivre la direction des pointes de pieds et ne pas dépasser celles-ci.",
+        "Descendez jusqu'à ce que vos cuisses soient parallèles au sol (ou selon votre mobilité).",
+        "Remontez en poussant sur les talons pour revenir à la position de départ.",
+        "Contractez les fessiers en haut du mouvement."
+    ],
+    niveau: 'débutant',
+    catégorie: 'renforcement',
+    image_url: 'https://picsum.photos/seed/squat/300/200'
+  },
+  {
+    id: 'ex2',
+    nom: 'Étirement Ischio-jambiers',
+    description: 'Étirement des muscles postérieurs de la cuisse pour améliorer la souplesse.',
+    detailed_steps: [
+        "Asseyez-vous au sol, une jambe tendue devant vous, l'autre pliée avec le pied contre l'intérieur de la cuisse tendue.",
+        "Gardez le dos droit.",
+        "Penchez-vous lentement vers l'avant à partir des hanches, en direction du pied de la jambe tendue.",
+        "Essayez d'attraper votre pied, votre cheville ou votre tibia, selon votre souplesse.",
+        "Maintenez la position lorsque vous sentez un étirement léger à modéré (pas de douleur).",
+        "Respirez profondément et détendez-vous dans l'étirement.",
+        "Maintenez la durée indiquée (souvent 30 secondes)." ,
+        "Changez de côté."
+    ],
+    niveau: 'intermédiaire',
+    catégorie: 'étirement',
+    image_url: 'https://picsum.photos/seed/hamstring/300/200'
+  },
+  {
+    id: 'ex3',
+    nom: 'Rotation Tronc Assis',
+    description: 'Mobilisation de la colonne vertébrale en rotation pour améliorer la mobilité du tronc.',
+    detailed_steps: [
+        "Asseyez-vous droit sur une chaise, les pieds à plat au sol.",
+        "Placez vos mains sur vos cuisses ou croisez les bras sur votre poitrine.",
+        "Tournez lentement le haut de votre corps (épaules et tête) vers un côté, sans bouger les hanches.",
+        "Allez jusqu'où vous pouvez confortablement.",
+        "Maintenez brièvement la position.",
+        "Revenez lentement au centre.",
+        "Répétez de l'autre côté.",
+        "Gardez le mouvement fluide et contrôlé."
+    ],
+    niveau: 'débutant',
+    catégorie: 'mobilité',
+    image_url: 'https://picsum.photos/seed/rotation/300/200'
+  },
 ];
 
 const mockProgram: Program = {
   id: 'prog123',
   patient_id: 'patientTest',
   liste_exercices: [
-    { exercice_id: 'ex1', séries: 3, répétitions: 12 }, // Frequency removed
-    { exercice_id: 'ex2', séries: 2, répétitions: 30 }, // Frequency removed, indicate hold time for stretches implicitly by category
-    { exercice_id: 'ex3', séries: 3, répétitions: 10 }, // Frequency removed
-    // Removed ex4 reference
-    // { exercice_id: 'ex4', séries: 3, répétitions: 15 }, // Frequency removed
+    { exercice_id: 'ex1', séries: 3, répétitions: 12 },
+    { exercice_id: 'ex2', séries: 2, répétitions: 30 }, // Represents 30 seconds hold for stretches
+    { exercice_id: 'ex3', séries: 3, répétitions: 10 }, // Represents 10 rotations each side
   ],
   statut: 'actif',
   date_creation: new Date().toISOString(),
@@ -73,6 +120,8 @@ export default function PatientDashboard() {
   const [motivationalQuote, setMotivationalQuote] = useState('');
   const [sessionStreak, setSessionStreak] = useState(0); // Example: track consecutive days with feedback
   const [totalSessions, setTotalSessions] = useState(0); // Example: track total feedback submissions
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   // Set date and initial quote on mount
   useEffect(() => {
@@ -96,6 +145,11 @@ export default function PatientDashboard() {
     console.log("Gamification state updated (simulated)");
     // Select a new quote after feedback submission
     setMotivationalQuote(motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]);
+  };
+
+  const handleExerciseClick = (exercise: Exercise) => {
+    setSelectedExercise(exercise);
+    setIsDetailModalOpen(true);
   };
 
   // TODO: Replace with actual data fetching logic for program, exercises, feedback history
@@ -126,14 +180,22 @@ export default function PatientDashboard() {
       <Card className="shadow-md">
         <CardHeader>
           <CardTitle>Votre Programme d'Exercices</CardTitle>
-          <CardDescription>Suivez les exercices prescrits par votre kinésithérapeute. Statut : <span className="font-semibold capitalize">{mockProgram.statut}</span></CardDescription>
+          <CardDescription>Suivez les exercices prescrits par votre kinésithérapeute. Cliquez sur un exercice pour voir les détails. Statut : <span className="font-semibold capitalize">{mockProgram.statut}</span></CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {populatedProgramExercises.length > 0 ? (
             populatedProgramExercises.map((progEx, index) => (
               progEx.exerciseDetails ? (
                 <div key={progEx.exercice_id}>
-                  <Card className="overflow-hidden border border-border/60 bg-card/80">
+                  {/* Make the Card clickable */}
+                  <Card
+                    className="overflow-hidden border border-border/60 bg-card/80 hover:shadow-md hover:border-primary/50 transition-all cursor-pointer group"
+                    onClick={() => handleExerciseClick(progEx.exerciseDetails!)}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Voir les détails de l'exercice ${progEx.exerciseDetails.nom}`}
+                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleExerciseClick(progEx.exerciseDetails!)}
+                  >
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {progEx.exerciseDetails.image_url && (
                         <div className="relative md:col-span-1 h-40 md:h-full">
@@ -148,7 +210,7 @@ export default function PatientDashboard() {
                         </div>
 
                       )}
-                       <div className={`p-4 ${progEx.exerciseDetails.image_url ? 'md:col-span-2' : 'md:col-span-3'}`}>
+                       <div className={`p-4 ${progEx.exerciseDetails.image_url ? 'md:col-span-2' : 'md:col-span-3'} relative`}>
                         <div className="flex justify-between items-start mb-2">
                             <h3 className="text-lg font-semibold">{progEx.exerciseDetails.nom}</h3>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground capitalize">
@@ -158,15 +220,18 @@ export default function PatientDashboard() {
                         </div>
 
                         <p className="text-sm text-muted-foreground mb-3">{progEx.exerciseDetails.description}</p>
-                        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm mb-4">
                           <span className="font-medium">Séries: <span className="font-normal">{progEx.séries}</span></span>
                           <span className="font-medium">Répétitions: <span className="font-normal">{progEx.répétitions} {progEx.exerciseDetails.catégorie === 'étirement' ? 'sec' : ''}</span></span>
-                          {/* Frequency removed */}
                            <span className="font-medium capitalize">Niveau: <span className="font-normal">{progEx.exerciseDetails.niveau}</span></span>
                         </div>
                         {progEx.exerciseDetails.contre_indications && progEx.exerciseDetails.contre_indications.length > 0 && (
                             <p className="text-xs text-destructive mt-2">Contre-indications: {progEx.exerciseDetails.contre_indications.join(', ')}</p>
                         )}
+                         {/* Click prompt */}
+                         <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs text-primary">
+                             Voir détails <ArrowRight className="w-3 h-3" />
+                         </div>
                       </div>
                     </div>
                   </Card>
@@ -190,7 +255,7 @@ export default function PatientDashboard() {
         />
 
 
-      {/* Patient Chatbot Popup Trigger (The actual popup is managed inside the component) */}
+      {/* Patient Chatbot Popup Trigger */}
       <PatientChatbotPopup />
 
 
@@ -202,9 +267,18 @@ export default function PatientDashboard() {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">L'historique des feedbacks sera disponible bientôt.</p>
-          {/* TODO: Implement feedback history display, potentially showing streak info */}
+          {/* TODO: Implement feedback history display */}
         </CardContent>
       </Card>
+
+      {/* Exercise Detail Modal */}
+      {selectedExercise && (
+        <ExerciseDetailModal
+          isOpen={isDetailModalOpen}
+          onClose={() => setIsDetailModalOpen(false)}
+          exercise={selectedExercise}
+        />
+      )}
     </div>
   );
 }

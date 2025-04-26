@@ -29,10 +29,12 @@ export default function LoadingPatientDashboard() {
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Skeleton className="md:col-span-1 h-40 md:h-full rounded-l-lg" /> {/* Image Placeholder */}
                     <div className="p-4 md:col-span-2 space-y-3">
-                       <Skeleton className="h-5 w-3/4" /> {/* Exercise name */}
+                       <Skeleton className="h-5 w-3/4 mb-1" /> {/* Exercise name + category icon space */}
                        <Skeleton className="h-4 w-full" /> {/* Description */}
+                       <Skeleton className="h-4 w-full mb-2" /> {/* Description line 2 (optional) */}
                        <Skeleton className="h-4 w-1/2" /> {/* Details (Series/Reps) */}
                        <Skeleton className="h-4 w-1/3" /> {/* Details (Level) */}
+                        {/* Removed skeleton for explicit detail button */}
                     </div>
                  </div>
                </Card>

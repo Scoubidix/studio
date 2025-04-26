@@ -2,6 +2,7 @@ export interface Exercise {
   id: string;
   nom: string;
   description: string;
+  detailed_steps?: string[]; // Added for detailed view
   image_url?: string;
   video_url?: string;
   niveau: 'débutant' | 'intermédiaire' | 'avancé';
