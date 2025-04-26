@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr"> {/* Set language to French */}
+    <html lang="fr">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Header /> {/* Added Header */}
         <main className="container mx-auto px-4 py-8">{children}</main> {/* Added container and padding */}
