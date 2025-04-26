@@ -17,7 +17,8 @@ const mockExercises: Exercise[] = [
   { id: 'ex1', nom: 'Squat', description: 'Flexion des genoux et des hanches.', niveau: 'débutant', catégorie: 'renforcement', image_url: 'https://picsum.photos/seed/squat/300/200' },
   { id: 'ex2', nom: 'Étirement Ischio-jambiers', description: 'Étirement des muscles postérieurs de la cuisse.', niveau: 'intermédiaire', catégorie: 'étirement', image_url: 'https://picsum.photos/seed/hamstring/300/200' },
   { id: 'ex3', nom: 'Rotation Tronc Assis', description: 'Mobilisation de la colonne vertébrale en rotation.', niveau: 'débutant', catégorie: 'mobilité', image_url: 'https://picsum.photos/seed/rotation/300/200' },
-  { id: 'ex4', nom: 'Pont Fessier', description: 'Renforcement des fessiers et du bas du dos.', niveau: 'intermédiaire', catégorie: 'renforcement', image_url: 'https://picsum.photos/seed/bridge/300/200' },
+  // Removed ex4 (Pont Fessier)
+  // { id: 'ex4', nom: 'Pont Fessier', description: 'Renforcement des fessiers et du bas du dos.', niveau: 'intermédiaire', catégorie: 'renforcement', image_url: 'https://picsum.photos/seed/bridge/300/200' },
 ];
 
 const mockProgram: Program = {
@@ -27,7 +28,8 @@ const mockProgram: Program = {
     { exercice_id: 'ex1', séries: 3, répétitions: 12 }, // Frequency removed
     { exercice_id: 'ex2', séries: 2, répétitions: 30 }, // Frequency removed, indicate hold time for stretches implicitly by category
     { exercice_id: 'ex3', séries: 3, répétitions: 10 }, // Frequency removed
-    { exercice_id: 'ex4', séries: 3, répétitions: 15 }, // Frequency removed
+    // Removed ex4 reference
+    // { exercice_id: 'ex4', séries: 3, répétitions: 15 }, // Frequency removed
   ],
   statut: 'actif',
   date_creation: new Date().toISOString(),
