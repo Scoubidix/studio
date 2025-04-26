@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -84,7 +85,7 @@ export default function PatientChatbotPopup({ patient }: PatientChatbotPopupProp
            const welcomeMessage: ChatMessage = {
                 id: 'welcome',
                 sender: 'bot',
-                text: `Bonjour ${patient.prénom}! Comment puis-je vous aider aujourd'hui ?` // Use patient's name
+                text: `Bonjour ${patient.prénom} ! Comment puis-je vous aider aujourd'hui ?` // Use patient's name
            };
            setMessages([welcomeMessage]);
       }
@@ -231,21 +232,22 @@ export default function PatientChatbotPopup({ patient }: PatientChatbotPopupProp
 
   return (
     <>
-       {/* Updated Button to open the chatbot popup */}
+       {/* Updated Floating Button Style */}
        <Button
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 z-50 rounded-full py-3 px-4 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground flex items-center gap-2 h-auto text-base" // Increased size and added flex properties
+            className="fixed bottom-6 right-6 z-50 rounded-full py-3 px-4 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground flex items-center gap-2 h-auto text-base transition-all transform hover:scale-105" // Added transitions
             aria-label="Ouvrir l'assistance patient"
        >
-           <MessageSquarePlus className="w-5 h-5" /> {/* Slightly smaller icon */}
-           <span>Une question ?</span> {/* Added text */}
+           <MessageSquarePlus className="w-5 h-5" />
+           <span>Une question ?</span> {/* Text is now always visible */}
        </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-[450px] p-0 flex flex-col max-h-[80vh] shadow-xl border">
           <DialogHeader className="p-4 border-b bg-muted/30 flex flex-row items-center gap-3">
+             {/* Bot Icon */}
              <Avatar className="w-10 h-10 border-2 border-primary bg-primary/20 text-primary flex-shrink-0">
-                 <AvatarFallback><Sparkles className="w-5 h-5" /></AvatarFallback> {/* Kine-Bot Icon */}
+                 <AvatarFallback><Sparkles className="w-5 h-5" /></AvatarFallback>
              </Avatar>
              <div>
                 <DialogTitle className="text-lg">Assistant Kiné Virtuel</DialogTitle>
@@ -260,13 +262,13 @@ export default function PatientChatbotPopup({ patient }: PatientChatbotPopupProp
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex items-end gap-2.5 ${ // Changed items-start to items-end, gap-3 to 2.5
-                    message.sender === 'user' ? 'justify-end' : 'justify-start' // Simplified justification
-                  } ${message.sender === 'system' ? '!justify-center' : ''}`} // Keep system messages centered
+                  className={`flex items-end gap-2.5 ${
+                    message.sender === 'user' ? 'justify-end' : 'justify-start'
+                  } ${message.sender === 'system' ? '!justify-center' : ''}`}
                 >
                   {message.sender === 'bot' && (
-                     <Avatar className="w-8 h-8 border bg-primary text-primary-foreground flex-shrink-0 mb-1"> {/* Added mb-1 */}
-                      <AvatarFallback><Bot className="w-4 h-4" /></AvatarFallback> {/* Standard Bot icon */}
+                     <Avatar className="w-8 h-8 border bg-primary text-primary-foreground flex-shrink-0 mb-1">
+                      <AvatarFallback><Sparkles className="w-4 h-4" /></AvatarFallback>
                     </Avatar>
                   )}
                    {message.sender === 'system' && !message.requiresEscalation && (
@@ -276,12 +278,12 @@ export default function PatientChatbotPopup({ patient }: PatientChatbotPopupProp
                    )}
                    {message.sender !== 'system' || message.requiresEscalation ? (
                      <div
-                        className={`rounded-lg p-3 max-w-[80%] text-sm shadow-sm break-words ${ // Added break-words
+                        className={`rounded-lg p-3 max-w-[80%] text-sm shadow-sm break-words ${
                         message.sender === 'user'
-                            ? 'bg-primary text-primary-foreground rounded-br-none' // User bubble styling
+                            ? 'bg-primary text-primary-foreground rounded-br-none'
                             : message.sender === 'bot'
-                            ? 'bg-background border rounded-bl-none' // Bot bubble styling
-                            : 'bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-900/30 dark:text-amber-100 dark:border-amber-700 w-full text-center' // System escalation message style
+                            ? 'bg-background border rounded-bl-none'
+                            : 'bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-900/30 dark:text-amber-100 dark:border-amber-700 w-full text-center'
                         }`}
                      >
                       {message.sender === 'system' && message.requiresEscalation && (
@@ -296,7 +298,7 @@ export default function PatientChatbotPopup({ patient }: PatientChatbotPopupProp
                                <Button
                                    size="sm"
                                    variant="outline"
-                                   className="text-xs h-7 border-amber-400 hover:bg-amber-200 dark:border-amber-600 dark:hover:bg-amber-800/50 text-amber-900 dark:text-amber-100" // Adjusted colors
+                                   className="text-xs h-7 border-amber-400 hover:bg-amber-200 dark:border-amber-600 dark:hover:bg-amber-800/50 text-amber-900 dark:text-amber-100"
                                    onClick={() => handleStartEscalation(lastUserQuestion, message.escalationReason)}
                                >
                                    <Send className="w-3 h-3 mr-1.5"/> Envoyer au Kiné
@@ -306,16 +308,16 @@ export default function PatientChatbotPopup({ patient }: PatientChatbotPopupProp
                     </div>
                    ) : null}
                    {message.sender === 'user' && (
-                      <Avatar className="w-8 h-8 border bg-muted flex-shrink-0 mb-1"> {/* Added mb-1 */}
+                      <Avatar className="w-8 h-8 border bg-muted flex-shrink-0 mb-1">
                        <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
                      </Avatar>
                    )}
                 </div>
               ))}
-              {isLoading && !isEscalating && ( // Show bot typing indicator only when not escalating
+              {isLoading && !isEscalating && (
                 <div className="flex items-end gap-2.5 justify-start">
                    <Avatar className="w-8 h-8 border bg-primary text-primary-foreground flex-shrink-0 mb-1">
-                       <AvatarFallback><Bot className="w-4 h-4" /></AvatarFallback>
+                       <AvatarFallback><Sparkles className="w-4 h-4" /></AvatarFallback>
                    </Avatar>
                    <div className="rounded-lg p-3 bg-background border shadow-sm rounded-bl-none">
                       <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -334,7 +336,7 @@ export default function PatientChatbotPopup({ patient }: PatientChatbotPopupProp
                       value={escalationMessage}
                       onChange={(e) => setEscalationMessage(e.target.value)}
                       rows={5}
-                      className="mb-2 text-sm bg-background" // Added bg-background
+                      className="mb-2 text-sm bg-background"
                       disabled={isLoading}
                       aria-label="Message à envoyer au kiné"
                   />
@@ -360,7 +362,7 @@ export default function PatientChatbotPopup({ patient }: PatientChatbotPopupProp
                     onKeyPress={handleKeyPress}
                     disabled={isLoading || isEscalating}
                     aria-label="Entrez votre question pour le chatbot"
-                    className="flex-grow bg-background" // Added bg-background
+                    className="flex-grow bg-background"
                   />
                   <Button onClick={handleSendMessage} disabled={isLoading || !inputValue.trim() || isEscalating} size="icon" aria-label="Envoyer le message" className="bg-primary hover:bg-primary/90 text-primary-foreground">
                     {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CornerDownLeft className="h-4 w-4" />}

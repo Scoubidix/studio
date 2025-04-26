@@ -1,4 +1,5 @@
 
+
 'use client'; // Need client component for state, effects, event handlers
 
 import { useState, useEffect } from 'react';
@@ -16,7 +17,7 @@ import ShopDisplay from '@/components/patient/shop-display'; // Import new compo
 import ProgressTestDisplay from '@/components/patient/progress-test-display'; // Import new component
 import KineCertificationDisplay from '@/components/patient/kine-certification-display'; // Import new component
 import Image from 'next/image';
-import { Dumbbell, Activity, StretchVertical, Trophy, CalendarDays, ArrowRight, Target, Share2, BookOpen, Microscope, ShoppingBag, ClipboardCheck, Award, BarChart } from 'lucide-react'; // Added new icons
+import { Dumbbell, Activity, StretchVertical, Trophy, CalendarDays, ArrowRight, Target, Share2, BookOpen, Microscope, ShoppingBag, ClipboardCheck, Award, BarChart, MessageSquarePlus } from 'lucide-react'; // Added MessageSquarePlus
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -91,7 +92,7 @@ const mockRewards = [
 
 const getExerciseDetails = (exerciseId: string): Exercise | undefined => mockExercises.find(ex => ex.id === exerciseId);
 const populatedProgramExercises: ProgramExercise[] = mockProgram.liste_exercices.map(progEx => ({ ...progEx, exerciseDetails: getExerciseDetails(progEx.exercice_id) }));
-const motivationalQuotes = [ "Chaque petit pas compte.", "La persévérance est la clé."]; // Removed the extra '...'
+const motivationalQuotes = [ "Chaque petit pas compte.", "La persévérance est la clé."];
 
 const getCategoryIcon = (category: Exercise['catégorie']) => {
   switch (category) {
@@ -232,7 +233,6 @@ export default function PatientDashboard() {
         {/* Updated TabsList for 5 items */}
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 mb-6">
           <TabsTrigger value="programme"><Dumbbell className="w-4 h-4 mr-1 md:mr-2"/>Programme</TabsTrigger>
-          {/* Removed Feedback Tab */}
           <TabsTrigger value="tests"><Activity className="w-4 h-4 mr-1 md:mr-2"/>Tests Prog.</TabsTrigger>
           <TabsTrigger value="blog"><BookOpen className="w-4 h-4 mr-1 md:mr-2"/>Infos</TabsTrigger>
           <TabsTrigger value="rapports"><Microscope className="w-4 h-4 mr-1 md:mr-2"/>Rapports</TabsTrigger>
@@ -299,17 +299,6 @@ export default function PatientDashboard() {
                 patientId={mockProgram.patient_id}
                 onFeedbackSubmitted={handleFeedbackSubmitted}
             />
-             {/* History Section - Kept for potential future use */}
-            {/* <Card className="shadow-md mt-8">
-                <CardHeader>
-                  <CardTitle>Historique des Séances</CardTitle>
-                  <CardDescription>Consultez vos précédents feedbacks.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">L'historique des feedbacks sera disponible bientôt.</p>
-                  {/* TODO: Implement feedback history display *}
-                </CardContent>
-            </Card> */}
         </TabsContent>
 
          {/* Progress Tests Tab with Leaderboard/Rewards */}
@@ -400,7 +389,7 @@ export default function PatientDashboard() {
 
 
       {/* Patient Chatbot Popup Trigger */}
-      <PatientChatbotPopup patient={mockPatientData} />
+      {mockPatientData && <PatientChatbotPopup patient={mockPatientData} />}
 
       {/* Exercise Detail Modal */}
       {selectedExercise && (
@@ -413,5 +402,3 @@ export default function PatientDashboard() {
     </div>
   );
 }
-
-    

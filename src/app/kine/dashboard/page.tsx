@@ -13,15 +13,15 @@ import PatientFeedbackDisplay from '@/components/kine/patient-feedback-display';
 import NotificationArea from '@/components/kine/notification-area';
 import AddPatientModal from '@/components/kine/add-patient-modal';
 import MarketplaceManager from '@/components/kine/marketplace-manager'; // Import new component
-// Removed BlogManager import, will use BlogDisplay
 import BlogDisplay from '@/components/shared/blog-display'; // Import shared BlogDisplay
 import TemplateBrowser from '@/components/kine/template-browser'; // Import new component
 import KineCertificationManager from '@/components/kine/kine-certification-manager'; // Import new component
+import KineChatbot from '@/components/kine/kine-chatbot'; // Import KineChatbot
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import type { Patient, Kine, Feedback, MessageToKine, ShopProgram, BlogPost, RehabProtocol, CertificationBadge } from '@/interfaces';
 import { mockFeedbacks } from '@/components/kine/mock-data';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Layers, Award, ChevronDown, ChevronUp } from 'lucide-react'; // Import new icons
+import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Layers, Award, ChevronDown, ChevronUp, Bot } from 'lucide-react'; // Import new icons
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -102,7 +102,9 @@ export default function KineDashboard() {
       highPainFeedback.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       unreadMessages.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       setNotifications({ feedbackAlerts: highPainFeedback, messages: unreadMessages });
-  }, [kineData, patients]);
+       // Open notifications accordion only if there are new notifications
+      setIsNotificationsOpen(highPainFeedback.length > 0 || unreadMessages.length > 0);
+  }, [kineData, patients]); // Depend on patients to update notifications when a new patient is added
 
   const handlePatientSelect = (patientId: string) => setSelectedPatientId(patientId);
 
@@ -187,11 +189,11 @@ export default function KineDashboard() {
         </div>
 
        {/* Collapsible Notification Area */}
-       <Accordion type="single" collapsible defaultValue={totalNotifications > 0 ? "notifications" : ""} onValueChange={(value) => setIsNotificationsOpen(value === "notifications")}>
+        <Accordion type="single" collapsible value={isNotificationsOpen ? "notifications" : ""} onValueChange={(value) => setIsNotificationsOpen(value === "notifications")}>
             <AccordionItem value="notifications" className="border-none">
                 {/* Custom Trigger */}
                 <AccordionTrigger
-                    className={`flex items-center justify-between w-full px-4 py-3 text-left text-lg font-semibold rounded-t-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                    className={`flex items-center justify-between w-full px-4 py-3 text-lg font-semibold rounded-t-lg cursor-pointer hover:bg-muted/50 transition-colors ${
                         isNotificationsOpen ? 'bg-muted rounded-b-none border-x border-t' : 'bg-card rounded-b-lg border'
                      } ${totalNotifications > 0 ? 'text-orange-700 dark:text-orange-300' : 'text-foreground'}`}
                      aria-label={isNotificationsOpen ? "Masquer les notifications" : "Afficher les notifications"}
@@ -337,9 +339,9 @@ export default function KineDashboard() {
            onPatientAdded={handleAddPatient}
        />
 
-       {/* TODO: Add other Kine features (e.g., Program Generation, Kine Chatbot) */}
+       {/* Kine Chatbot Trigger */}
+       {kineData && <KineChatbot kine={kineData} />}
+
     </div>
   );
 }
-
-    
