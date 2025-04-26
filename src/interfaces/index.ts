@@ -48,6 +48,8 @@ export interface Patient {
   remarques: string;
   kine_id: string; // Reference to Kine
   objectifs: string[]; // Added patient goals
+  subscriptionEndDate?: string; // Optional: ISO date string for subscription end
+  subscriptionStatus?: 'active' | 'expiring' | 'expired'; // Optional: Status of subscription
 }
 
 // Represents a message that can be sent to the Kiné
@@ -69,3 +71,4 @@ export interface Kine {
     spécialité: string;
     // patient_ids?: string[]; // Optional: If storing assigned patient IDs directly on the kine document
 }
+

@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert components
 import { Button } from '@/components/ui/button'; // Import Button
 import PatientSelector from '@/components/kine/patient-selector';
 import PatientInfoForm from '@/components/kine/patient-info-form';
@@ -13,7 +14,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import type { Patient, Kine, Feedback, MessageToKine } from '@/interfaces';
 import { mockFeedbacks } from '@/components/kine/mock-data'; // Import shared mock feedbacks
 import { useToast } from '@/hooks/use-toast'; // Import useToast for add patient confirmation
-import { PlusCircle } from 'lucide-react'; // Import icon for Add Patient button
+import { PlusCircle, CalendarDays, BellRing, UserCheck } from 'lucide-react'; // Import icons
+import { format, differenceInDays, parseISO, isBefore } from 'date-fns'; // Import date-fns functions
+import { fr } from 'date-fns/locale'; // Import French locale
 
 // --- Mock Data (Initial Data - now managed by state) ---
 const initialMockKine: Kine = {
@@ -24,6 +27,7 @@ const initialMockKine: Kine = {
     spécialité: 'Sport',
 };
 
+// Add subscription info to mock patients
 const initialMockPatients: Patient[] = [
     {
         id: 'patientTest',
@@ -35,6 +39,8 @@ const initialMockPatients: Patient[] = [
         remarques: 'Motivé mais craint la douleur.',
         kine_id: 'kineTest1',
         objectifs: ['Amélioration de la mobilité lombaire', 'Reprise progressive de la course à pied'],
+        subscriptionEndDate: new Date(Date.now() + 86400000 * 10).toISOString(), // Ends in 10 days
+        subscriptionStatus: 'active',
     },
     {
         id: 'patientTest2',
@@ -46,6 +52,8 @@ const initialMockPatients: Patient[] = [
         remarques: 'Sportive (Volley), veut reprendre rapidement.',
         kine_id: 'kineTest1',
         objectifs: ['Récupération complète mobilité cheville', 'Renforcement musculaire préventif'],
+        subscriptionEndDate: new Date(Date.now() + 86400000 * 5).toISOString(), // Ends in 5 days
+        subscriptionStatus: 'active',
     },
      {
         id: 'patientTest3',
@@ -57,6 +65,21 @@ const initialMockPatients: Patient[] = [
         remarques: 'Jeune footballeur, en pleine croissance.',
         kine_id: 'kineTest1',
         objectifs: ['Diminution douleur pendant effort', 'Correction posture/gestuelle'],
+        subscriptionEndDate: new Date(Date.now() - 86400000 * 2).toISOString(), // Ended 2 days ago
+        subscriptionStatus: 'expired',
+    },
+     {
+        id: 'patientTest4', // New patient
+        nom: 'Dubois',
+        prénom: 'Marie',
+        email: 'marie.dubois@email.com',
+        date_naissance: '1978-12-01',
+        pathologies: ['Arthrose cervicale'],
+        remarques: 'Sédentaire, cherche à soulager les douleurs.',
+        kine_id: 'kineTest1',
+        objectifs: ['Augmenter la mobilité cervicale', 'Réduire les céphalées de tension'],
+        subscriptionEndDate: new Date(Date.now() + 86400000 * 45).toISOString(), // Ends in 45 days
+        subscriptionStatus: 'active',
     },
 ];
 
@@ -97,6 +120,26 @@ export default function KineDashboard() {
   const [notifications, setNotifications] = useState<{ feedbackAlerts: Feedback[], messages: MessageToKine[] }>({ feedbackAlerts: [], messages: [] });
   const [isAddPatientModalOpen, setIsAddPatientModalOpen] = useState(false); // State for Add Patient modal
   const { toast } = useToast();
+  const [currentDate, setCurrentDate] = useState('');
+  const [expiringSubscriptions, setExpiringSubscriptions] = useState<Patient[]>([]);
+
+  // Update current date and check for expiring subscriptions on mount and when patients change
+  useEffect(() => {
+    const today = new Date();
+    setCurrentDate(format(today, "EEEE d MMMM yyyy", { locale: fr }));
+
+    const upcomingExpiryLimit = 14; // Days before expiry to show reminder
+    const expiring = patients.filter(p => {
+        if (!p.subscriptionEndDate) return false;
+        const endDate = parseISO(p.subscriptionEndDate);
+        const daysLeft = differenceInDays(endDate, today);
+        return daysLeft >= 0 && daysLeft <= upcomingExpiryLimit;
+    }).sort((a, b) => differenceInDays(parseISO(a.subscriptionEndDate!), today) - differenceInDays(parseISO(b.subscriptionEndDate!), today)); // Sort by soonest expiry
+
+    setExpiringSubscriptions(expiring);
+
+  }, [patients]);
+
 
   // Update notifications based on current patients list
   useEffect(() => {
@@ -141,6 +184,8 @@ export default function KineDashboard() {
           pathologies: [], // Initialize empty arrays
           remarques: '',
           objectifs: [],
+          subscriptionEndDate: new Date(Date.now() + 86400000 * 30).toISOString(), // Default 30 days subscription
+          subscriptionStatus: 'active',
       };
 
       console.log('Simulating adding patient:', newPatient);
@@ -166,6 +211,37 @@ export default function KineDashboard() {
 
   return (
     <div className="space-y-8">
+       {/* Date and Subscription Reminders Header */}
+        <div className="flex flex-col md:flex-row justify-between md:items-start gap-4 mb-6 p-4 bg-card rounded-lg shadow-sm border">
+            <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                <CalendarDays className="w-5 h-5 text-primary"/>
+                <span className="capitalize">{currentDate}</span>
+            </div>
+            {/* Subscription Reminders */}
+            {expiringSubscriptions.length > 0 && (
+                <div className="w-full md:w-auto md:max-w-md lg:max-w-lg">
+                    <Alert variant="default" className="border-yellow-400 bg-yellow-50 dark:bg-yellow-900/30 dark:border-yellow-700">
+                        <BellRing className="h-4 w-4 !text-yellow-600 dark:!text-yellow-400 !left-3 !top-3.5" />
+                        <AlertTitle className="ml-6 text-sm font-semibold text-yellow-800 dark:text-yellow-200">Abonnements à renouveler</AlertTitle>
+                        <AlertDescription className="ml-6 text-xs space-y-1 text-yellow-700 dark:text-yellow-300">
+                            {expiringSubscriptions.map(p => (
+                                <div key={p.id} className="flex justify-between items-center">
+                                    <span>{p.prénom} {p.nom}</span>
+                                    <span className="font-medium">
+                                        Expire le {format(parseISO(p.subscriptionEndDate!), 'd MMM yyyy', { locale: fr })}
+                                        {' '}(J-{differenceInDays(parseISO(p.subscriptionEndDate!), new Date())})
+                                    </span>
+                                    <Button variant="link" size="xs" className="h-5 p-0 text-xs text-primary" onClick={() => handlePatientSelect(p.id)}>
+                                        Voir
+                                    </Button>
+                                </div>
+                            ))}
+                        </AlertDescription>
+                    </Alert>
+                </div>
+            )}
+        </div>
+
        {/* Notification Area */}
        <NotificationArea
            feedbackAlerts={notifications.feedbackAlerts}
@@ -204,11 +280,14 @@ export default function KineDashboard() {
       {/* Selected Patient Details Area */}
       {selectedPatientId && selectedPatient ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-           {/* Patient Information & Goals (Collapsible) */}
-            <Accordion type="single" collapsible defaultValue="patient-info" className="w-full lg:col-span-2">
+           {/* Patient Information & Goals (Collapsible, closed by default) */}
+            <Accordion type="single" collapsible className="w-full lg:col-span-2">
               <AccordionItem value="patient-info">
                 <AccordionTrigger className="text-lg font-semibold px-6 py-4 bg-card rounded-t-lg border data-[state=closed]:rounded-b-lg data-[state=closed]:border-b data-[state=open]:border-b-0 hover:no-underline hover:bg-muted/50">
-                    Informations & Bilan Initial - {selectedPatientName}
+                    <div className="flex items-center gap-2">
+                        <UserCheck className="w-5 h-5 text-primary" /> {/* Icon for Patient Info */}
+                        Informations & Bilan Initial - {selectedPatientName}
+                    </div>
                 </AccordionTrigger>
                 <AccordionContent className="border border-t-0 rounded-b-lg bg-card p-0">
                   {/* Pass the selected patient data and a (mock) save handler */}
