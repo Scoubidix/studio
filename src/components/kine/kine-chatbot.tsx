@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'; // Use Card for layout
+// Removed Dialog imports
 import { useToast } from '@/hooks/use-toast';
 import type { Kine } from '@/interfaces'; // Import Kine interface
 import { Loader2, User, Bot, CornerDownLeft, Sparkles, DraftingCompass } from 'lucide-react'; // Example icons
@@ -34,13 +35,12 @@ const mockKineChatbotResponse = async (question: string, kineContext: Kine): Pro
     } else if (question.toLowerCase().includes("résume cet article")) {
         return `Veuillez fournir l'URL ou le texte de l'article que vous souhaitez résumer. Je peux essayer d'en extraire les points clés.`;
     } else {
-        return `Bonjour Dr. ${kineContext.nom}. Je suis votre assistant IA. Je peux vous aider à générer des programmes, analyser des feedbacks, ou résumer des articles. Comment puis-je vous assister aujourd'hui ?`;
+        return `Bonjour Dr. ${kineContext.nom}. Je suis votre assistant IA Mak. Je peux vous aider à générer des programmes, analyser des feedbacks, ou rechercher des informations scientifiques. Comment puis-je vous assister aujourd'hui ?`;
     }
 };
 // --- End Mock Data ---
 
 export default function KineChatbot({ kine }: KineChatbotProps) {
-  const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -51,35 +51,31 @@ export default function KineChatbot({ kine }: KineChatbotProps) {
 
    const scrollToBottom = useCallback(() => {
     if (scrollAreaRef.current) {
-      const scrollViewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
+      // Access the viewport element within the ScrollArea
+      const scrollViewport = scrollAreaRef.current.querySelector<HTMLDivElement>('div[data-radix-scroll-area-viewport]');
       if (scrollViewport) {
+         // Use setTimeout to ensure scrolling happens after the DOM update
         setTimeout(() => scrollViewport.scrollTo({ top: scrollViewport.scrollHeight, behavior: 'smooth' }), 100);
       }
     }
   }, []);
 
    useEffect(() => {
-    if (isOpen) {
-      // Add personalized welcome message when opening
+      // Initialize with welcome message if messages are empty
       if (messages.length === 0 && kine) {
            const welcomeMessage: ChatMessage = {
                 id: 'welcome-kine',
                 sender: 'bot',
-                text: `Bonjour Dr. ${kine.nom}. Comment puis-je vous aider aujourd'hui ? (ex: "génère un programme", "analyse feedback patient X", "résume cet article...")`
+                text: `Bonjour Dr. ${kine.nom}. Je suis Mak, votre assistant IA. Je suis là pour vous aider avec la recherche d'informations scientifiques, la génération de programmes et l'analyse de données patient. Comment puis-je vous assister aujourd'hui ? (ex: "Quelles sont les dernières recommandations pour LCA ?", "Génère un programme pour lombalgie", "Analyse feedback patient X")`
            };
            setMessages([welcomeMessage]);
       }
+      // Auto-focus input when component mounts or kine data changes
       inputRef.current?.focus();
-      scrollToBottom();
-    } else {
-        // Reset chat state when closing - optionally keep history
-        setIsLoading(false);
-        setInputValue('');
-        // Keep messages on close: setMessages([]);
-    }
-  }, [isOpen, scrollToBottom, kine, messages.length]);
+  }, [kine]); // Depend on kine data
 
    useEffect(() => {
+    // Scroll down when messages update
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
@@ -95,6 +91,8 @@ export default function KineChatbot({ kine }: KineChatbotProps) {
 
     try {
       // --- TODO: Replace with actual Genkit flow calls based on intent detection ---
+      // This might involve a more complex flow that determines the intent (info search, program gen, etc.)
+      // and calls the appropriate underlying Genkit flow or tool.
       const responseText = await mockKineChatbotResponse(userMessage, kine);
       // --- End Replace ---
 
@@ -106,9 +104,10 @@ export default function KineChatbot({ kine }: KineChatbotProps) {
        const errorMessage: ChatMessage = {
            id: Date.now().toString() + '-err',
            sender: 'bot',
-           text: "Désolé, une erreur s'est produite. Veuillez réessayer."
+           text: "Désolé, une erreur s'est produite lors de la communication avec l'assistant. Veuillez réessayer."
        };
       setMessages(prev => [...prev, errorMessage]);
+       toast({ title: "Erreur Chatbot", description: "Impossible de contacter l'assistant IA.", variant: "destructive"});
     } finally {
       setIsLoading(false);
        setTimeout(() => inputRef.current?.focus(), 0);
@@ -123,75 +122,67 @@ export default function KineChatbot({ kine }: KineChatbotProps) {
 
 
   return (
-    <>
-       {/* Floating Action Button for Kine Chatbot */}
-       <Button
-            onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 z-50 rounded-full p-3 shadow-lg bg-accent hover:bg-accent/90 text-accent-foreground h-12 w-12" // Adjusted size and colors
-            aria-label="Ouvrir l'assistant Kiné IA"
-       >
-           <Sparkles className="w-5 h-5" />
-       </Button>
-
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[500px] p-0 flex flex-col max-h-[80vh] shadow-xl border">
-          <DialogHeader className="p-4 border-b bg-muted/30 flex flex-row items-center gap-3">
-             {/* Kine-Specific Icon */}
+    <Card className="shadow-md h-[75vh] flex flex-col"> {/* Use Card and set height */}
+        <CardHeader className="border-b flex flex-row items-center gap-3 p-4">
+            {/* Kine-Specific Icon */}
              <Avatar className="w-10 h-10 border-2 border-accent bg-accent/20 text-accent flex-shrink-0">
                  <AvatarFallback><DraftingCompass className="w-5 h-5" /></AvatarFallback>
              </Avatar>
              <div>
-                <DialogTitle className="text-lg">Assistant Kiné IA</DialogTitle>
-                <DialogDescription className="text-sm">
-                   Votre outil IA pour optimiser votre pratique.
-                </DialogDescription>
+                <CardTitle className="text-lg">Assistant Kiné IA "Mak"</CardTitle>
+                <CardDescription className="text-sm">
+                    Votre outil IA pour la recherche d'information et l'aide à la décision clinique.
+                </CardDescription>
              </div>
-          </DialogHeader>
+        </CardHeader>
 
-           <ScrollArea className="flex-grow overflow-y-auto p-4 bg-muted/10" ref={scrollAreaRef}>
-             <div className="space-y-4 ">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex items-end gap-2.5 ${
-                    message.sender === 'user' ? 'justify-end' : 'justify-start'
-                  }`}
-                >
-                  {message.sender === 'bot' && (
-                     <Avatar className="w-8 h-8 border bg-accent text-accent-foreground flex-shrink-0 mb-1">
-                      <AvatarFallback><DraftingCompass className="w-4 h-4" /></AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div
-                    className={`rounded-lg p-3 max-w-[80%] text-sm shadow-sm break-words ${
-                    message.sender === 'user'
-                        ? 'bg-primary text-primary-foreground rounded-br-none'
-                        : 'bg-background border rounded-bl-none'
-                    }`}
-                  >
-                      {message.text}
+        <CardContent className="flex-grow p-0 overflow-hidden"> {/* Content takes remaining space, no padding */}
+            <ScrollArea className="h-full p-4" ref={scrollAreaRef}> {/* ScrollArea fills CardContent */}
+                 <div className="space-y-4 pb-4"> {/* Add padding bottom inside scroll area */}
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex items-end gap-2.5 ${
+                        message.sender === 'user' ? 'justify-end' : 'justify-start'
+                      }`}
+                    >
+                      {message.sender === 'bot' && (
+                         <Avatar className="w-8 h-8 border bg-accent text-accent-foreground flex-shrink-0 mb-1">
+                          <AvatarFallback><DraftingCompass className="w-4 h-4" /></AvatarFallback>
+                        </Avatar>
+                      )}
+                      <div
+                        className={`rounded-lg p-3 max-w-[80%] text-sm shadow-sm break-words ${
+                        message.sender === 'user'
+                            ? 'bg-primary text-primary-foreground rounded-br-none'
+                            : 'bg-background border rounded-bl-none'
+                        }`}
+                      >
+                          {message.text}
+                        </div>
+                       {message.sender === 'user' && (
+                          <Avatar className="w-8 h-8 border bg-muted flex-shrink-0 mb-1">
+                           <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
+                         </Avatar>
+                       )}
                     </div>
-                   {message.sender === 'user' && (
-                      <Avatar className="w-8 h-8 border bg-muted flex-shrink-0 mb-1">
-                       <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
-                     </Avatar>
-                   )}
-                </div>
-              ))}
-              {isLoading && (
-                <div className="flex items-end gap-2.5 justify-start">
-                   <Avatar className="w-8 h-8 border bg-accent text-accent-foreground flex-shrink-0 mb-1">
-                       <AvatarFallback><DraftingCompass className="w-4 h-4" /></AvatarFallback>
-                   </Avatar>
-                   <div className="rounded-lg p-3 bg-background border shadow-sm rounded-bl-none">
-                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                   </div>
-                </div>
-              )}
-             </div>
-           </ScrollArea>
+                  ))}
+                  {isLoading && (
+                    <div className="flex items-end gap-2.5 justify-start">
+                       <Avatar className="w-8 h-8 border bg-accent text-accent-foreground flex-shrink-0 mb-1">
+                           <AvatarFallback><DraftingCompass className="w-4 h-4" /></AvatarFallback>
+                       </Avatar>
+                       <div className="rounded-lg p-3 bg-background border shadow-sm rounded-bl-none">
+                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                       </div>
+                    </div>
+                  )}
+                 </div>
+            </ScrollArea>
+        </CardContent>
 
-           <DialogFooter className="p-4 border-t bg-muted/30">
+        {/* Input area in Card Footer */}
+         <div className="p-4 border-t bg-muted/30">
              <div className="flex gap-2 w-full items-center">
               <Input
                 ref={inputRef}
@@ -201,16 +192,14 @@ export default function KineChatbot({ kine }: KineChatbotProps) {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 disabled={isLoading}
-                aria-label="Entrez votre demande pour l'assistant IA"
+                aria-label="Entrez votre demande pour l'assistant IA Mak"
                 className="flex-grow bg-background"
               />
               <Button onClick={handleSendMessage} disabled={isLoading || !inputValue.trim()} size="icon" aria-label="Envoyer la demande" className="bg-accent hover:bg-accent/90 text-accent-foreground">
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CornerDownLeft className="h-4 w-4" />}
               </Button>
              </div>
-           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+           </div>
+    </Card>
   );
 }

@@ -15,14 +15,14 @@ import NotificationArea from '@/components/kine/notification-area';
 import AddPatientModal from '@/components/kine/add-patient-modal';
 import MarketplaceManager from '@/components/kine/marketplace-manager'; // Import new component
 import BlogDisplay from '@/components/shared/blog-display'; // Import shared BlogDisplay
-import TemplateBrowser from '@/components/kine/template-browser'; // Import new component
+// import TemplateBrowser from '@/components/kine/template-browser'; // Removed template browser import
 import KineCertificationManager from '@/components/kine/kine-certification-manager'; // Import new component
 import KineChatbot from '@/components/kine/kine-chatbot'; // Import KineChatbot
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import type { Patient, Kine, Feedback, MessageToKine, ShopProgram, BlogPost, RehabProtocol, CertificationBadge } from '@/interfaces';
 import { mockFeedbacks } from '@/components/kine/mock-data';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Layers, Award, ChevronDown, ChevronUp, Bot, Share2, Star, Trophy } from 'lucide-react'; // Import new icons
+import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Award, ChevronDown, ChevronUp, Bot, Share2, Star, Trophy } from 'lucide-react'; // Import new icons, removed Layers
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import KineCertificationDisplay from '@/components/patient/kine-certification-display'; // Import display component (can reuse)
@@ -80,10 +80,8 @@ const mockKineBlogPosts: BlogPost[] = [
      { id: 'kblog2', title: 'Tendinopathies d\'Achille : Approches Thérapeutiques Actuelles', summary: 'Synthèse des données sur la prise en charge des tendinopathies achilléennes, focus sur les exercices excentriques, ondes de choc et thérapie manuelle.', publishDate: '2024-07-18T00:00:00.000Z', tags: ['tendinopathie', 'achille', 'rééducation', 'evidence-based'], author: 'Dr. Alain Dubois', contentUrl: '#', imageUrl: 'https://picsum.photos/seed/achilles/300/150' },
      { id: 'kblog3', title: 'Syndrome Douloureux Fémoro-Patellaire : Diagnostic et Traitement', summary: 'Critères diagnostiques et revue des interventions efficaces (renforcement quadricipital et fessier, taping, orthèses plantaires).', publishDate: '2024-06-10T00:00:00.000Z', tags: ['genou', 'SDFP', 'syndrome rotulien', 'diagnostic', 'traitement'], author: 'Dr. Sophie Leroy', contentUrl: '#', imageUrl: 'https://picsum.photos/seed/pfps/300/150' },
 ];
-const mockRehabProtocols: RehabProtocol[] = [
-    { id: 'proto1', name: 'Protocole Standard - Reconstruction LCA (Kenneth)', condition: 'ACL Reconstruction', description: 'Protocole phasé classique pour la rééducation post-opératoire du LCA.', phases: [], source: 'Protocole interne basé sur Kenneth', lastUpdated: '2024-06-01T00:00:00.000Z', keywords: ['genou', 'lca', 'ligament croisé', 'standard', 'kenneth'] },
-    { id: 'proto2', name: 'Protocole Accéléré - Réparation Coiffe des Rotateurs', condition: 'Rotator Cuff Repair', description: 'Protocole pour une reprise plus rapide après réparation arthroscopique.', phases: [], source: 'Journal of Shoulder and Elbow Surgery', lastUpdated: '2024-05-15T00:00:00.000Z', keywords: ['épaule', 'coiffe des rotateurs', 'arthroscopie', 'accéléré'] },
-];
+// Removed mockRehabProtocols as the tab is removed
+// const mockRehabProtocols: RehabProtocol[] = [ ... ];
 // --- End Mock Data ---
 
 
@@ -102,7 +100,8 @@ export default function KineDashboard() {
   const [shopPrograms, setShopPrograms] = useState<ShopProgram[]>(mockKineShopPrograms);
   // Blog posts state now uses kine-specific blog posts
   const [kineBlogPosts] = useState<BlogPost[]>(mockKineBlogPosts); // Assuming read-only for now
-  const [rehabProtocols] = useState<RehabProtocol[]>(mockRehabProtocols); // Assuming protocols are read-only for now
+  // Removed protocols state
+  // const [rehabProtocols] = useState<RehabProtocol[]>(mockRehabProtocols);
   const [certifications, setCertifications] = useState<CertificationBadge[]>(initialMockKine.certifications || []);
 
   // Gamification state
@@ -330,12 +329,14 @@ export default function KineDashboard() {
 
       {/* Main Dashboard */}
       <Tabs defaultValue="patients" className="w-full">
+        {/* Updated grid columns and removed Protocoles tab */}
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6">
             <TabsTrigger value="patients"><UserCheck className="w-4 h-4 mr-2"/>Gestion Patients</TabsTrigger>
+            <TabsTrigger value="chatbot"><Bot className="w-4 h-4 mr-2"/>Chatbot Mak</TabsTrigger> {/* New Chatbot Tab */}
             <TabsTrigger value="marketplace"><Store className="w-4 h-4 mr-2"/>Marketplace</TabsTrigger>
             <TabsTrigger value="blog"><BookOpen className="w-4 h-4 mr-2"/>Blog Pro</TabsTrigger>
-            <TabsTrigger value="templates"><Layers className="w-4 h-4 mr-2"/>Protocoles</TabsTrigger>
-            <TabsTrigger value="certifications"><Award className="w-4 h-4 mr-2"/>Badges Pro</TabsTrigger> {/* Renamed for clarity */}
+            {/* <TabsTrigger value="templates"><Layers className="w-4 h-4 mr-2"/>Protocoles</TabsTrigger> */} {/* Removed Protocoles */}
+            <TabsTrigger value="certifications"><Award className="w-4 h-4 mr-2"/>Badges Pro</TabsTrigger>
         </TabsList>
 
         {/* Patient Management Tab */}
@@ -398,6 +399,19 @@ export default function KineDashboard() {
               )}
         </TabsContent>
 
+         {/* Kine Chatbot Tab */}
+         <TabsContent value="chatbot">
+             {kineData ? (
+                 <KineChatbot kine={kineData} />
+             ) : (
+                  <Card>
+                    <CardContent className="p-6 text-center text-muted-foreground">
+                        Chargement des informations du kiné...
+                    </CardContent>
+                 </Card>
+             )}
+         </TabsContent>
+
         {/* Marketplace Tab */}
         <TabsContent value="marketplace">
             <MarketplaceManager
@@ -419,10 +433,10 @@ export default function KineDashboard() {
             />
         </TabsContent>
 
-        {/* Templates Tab */}
-        <TabsContent value="templates">
+        {/* Templates Tab - REMOVED */}
+        {/* <TabsContent value="templates">
             <TemplateBrowser protocols={rehabProtocols} />
-        </TabsContent>
+        </TabsContent> */}
 
          {/* Certifications Tab */}
         <TabsContent value="certifications">
@@ -445,8 +459,8 @@ export default function KineDashboard() {
            onPatientAdded={handleAddPatient}
        />
 
-       {/* Kine Chatbot Trigger */}
-       {kineData && <KineChatbot kine={kineData} />}
+       {/* Kine Chatbot Trigger - REMOVED (Now inside a tab) */}
+       {/* {kineData && <KineChatbot kine={kineData} />} */}
 
     </div>
   );

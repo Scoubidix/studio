@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Import Tabs
 import { Program, Exercise, ProgramExercise, Feedback, Patient, Kine, BlogPost, ShopProgram, ProgressTest, CertificationBadge } from "@/interfaces"; // Import needed interfaces
 import FeedbackForm from '@/components/patient/feedback-form';
-import PatientChatbotPopup from '@/components/patient/patient-chatbot';
+import PatientChatbot from '@/components/patient/patient-chatbot'; // Renamed import
 import ExerciseDetailModal from '@/components/patient/exercise-detail-modal';
 import MedicalReportSummarizer from '@/components/patient/medical-report-summarizer'; // Import new component
 import BlogDisplay from '@/components/shared/blog-display'; // Import shared component
@@ -17,7 +17,7 @@ import ShopDisplay from '@/components/patient/shop-display'; // Import new compo
 import ProgressTestDisplay from '@/components/patient/progress-test-display'; // Import new component
 import KineCertificationDisplay from '@/components/patient/kine-certification-display'; // Import new component
 import Image from 'next/image';
-import { Dumbbell, Activity, StretchVertical, Trophy, CalendarDays, ArrowRight, Target, Share2, BookOpen, Microscope, ShoppingBag, ClipboardCheck, Award, BarChart, MessageSquarePlus } from 'lucide-react'; // Added MessageSquarePlus
+import { Dumbbell, Activity, StretchVertical, Trophy, CalendarDays, ArrowRight, Target, Share2, BookOpen, Microscope, ShoppingBag, ClipboardCheck, Award, BarChart, MessageSquarePlus, Bot } from 'lucide-react'; // Added Bot
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -120,7 +120,7 @@ export default function PatientDashboard() {
     const today = new Date();
     setCurrentDate(format(today, "EEEE d MMMM yyyy", { locale: fr }));
     setMotivationalQuote(motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]);
-    // TODO: Fetch real data
+    // TODO: Fetch real data for patient, kine, program, etc.
   }, []);
 
   const handleFeedbackSubmitted = () => {
@@ -230,9 +230,10 @@ export default function PatientDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="programme" className="w-full">
-        {/* Updated TabsList for 5 items */}
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 mb-6">
+        {/* Updated TabsList to include Chatbot */}
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 mb-6">
           <TabsTrigger value="programme"><Dumbbell className="w-4 h-4 mr-1 md:mr-2"/>Programme</TabsTrigger>
+          <TabsTrigger value="chatbot"><Bot className="w-4 h-4 mr-1 md:mr-2"/>Assistant</TabsTrigger> {/* New Chatbot Tab */}
           <TabsTrigger value="tests"><Activity className="w-4 h-4 mr-1 md:mr-2"/>Tests Prog.</TabsTrigger>
           <TabsTrigger value="blog"><BookOpen className="w-4 h-4 mr-1 md:mr-2"/>Infos</TabsTrigger>
           <TabsTrigger value="rapports"><Microscope className="w-4 h-4 mr-1 md:mr-2"/>Rapports</TabsTrigger>
@@ -300,6 +301,20 @@ export default function PatientDashboard() {
                 onFeedbackSubmitted={handleFeedbackSubmitted}
             />
         </TabsContent>
+
+        {/* Patient Chatbot Tab */}
+        <TabsContent value="chatbot">
+           {mockPatientData ? (
+                <PatientChatbot patient={mockPatientData} />
+           ) : (
+                <Card>
+                  <CardContent className="p-6 text-center text-muted-foreground">
+                    Chargement des informations patient...
+                  </CardContent>
+                </Card>
+           )}
+        </TabsContent>
+
 
          {/* Progress Tests Tab with Leaderboard/Rewards */}
         <TabsContent value="tests" className="space-y-8">
@@ -388,8 +403,8 @@ export default function PatientDashboard() {
       </Tabs>
 
 
-      {/* Patient Chatbot Popup Trigger */}
-      {mockPatientData && <PatientChatbotPopup patient={mockPatientData} />}
+      {/* Patient Chatbot Popup Trigger - REMOVED */}
+      {/* {mockPatientData && <PatientChatbotPopup patient={mockPatientData} />} */}
 
       {/* Exercise Detail Modal */}
       {selectedExercise && (

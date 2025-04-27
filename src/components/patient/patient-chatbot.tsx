@@ -7,13 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'; // Removed DialogClose as it's handled by onOpenChange
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'; // Use Card for layout
+// Removed Dialog imports
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { personalizedPatientChatbot } from '@/ai/flows/patient-chatbot'; // Import the updated Genkit flow
 import type { PersonalizedPatientChatbotInput, PersonalizedPatientChatbotOutput } from '@/ai/flows/patient-chatbot';
 import type { Patient, MessageToKine } from '@/interfaces'; // Import Patient interface
-import { Loader2, User, Bot, MessageSquarePlus, Send, CornerDownLeft, AlertTriangle, Sparkles } from 'lucide-react'; // Added Sparkles
+import { Loader2, User, Bot, Send, CornerDownLeft, AlertTriangle, Sparkles } from 'lucide-react'; // Removed MessageSquarePlus
 
 interface ChatMessage {
   id: string;
@@ -23,7 +24,7 @@ interface ChatMessage {
   escalationReason?: string; // Reason from the bot
 }
 
-interface PatientChatbotPopupProps {
+interface PatientChatbotProps {
     patient: Patient; // Accept patient data as a prop
 }
 
@@ -54,8 +55,7 @@ const sendMessageToKine = async (messageData: MessageToKine): Promise<void> => {
 };
 // --- End Mock Data ---
 
-export default function PatientChatbotPopup({ patient }: PatientChatbotPopupProps) { // Destructure patient prop
-  const [isOpen, setIsOpen] = useState(false);
+export default function PatientChatbot({ patient }: PatientChatbotProps) { // Destructure patient prop
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -71,37 +71,27 @@ export default function PatientChatbotPopup({ patient }: PatientChatbotPopupProp
 
    const scrollToBottom = useCallback(() => {
     if (scrollAreaRef.current) {
-      const scrollViewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
+      const scrollViewport = scrollAreaRef.current.querySelector<HTMLDivElement>('div[data-radix-scroll-area-viewport]');
       if (scrollViewport) {
         setTimeout(() => scrollViewport.scrollTo({ top: scrollViewport.scrollHeight, behavior: 'smooth' }), 100);
       }
     }
   }, []);
 
+
    useEffect(() => {
-    if (isOpen) {
-      // Add personalized welcome message when opening
-      if (messages.length === 0 && patient) { // Check if patient data is available
+      // Add personalized welcome message when component mounts and patient data is available
+      if (messages.length === 0 && patient) {
            const welcomeMessage: ChatMessage = {
                 id: 'welcome',
                 sender: 'bot',
-                text: `Bonjour ${patient.prénom} ! Comment puis-je vous aider aujourd'hui ?` // Use patient's name
+                text: `Bonjour ${patient.prénom} ! Je suis votre assistant virtuel. Je connais votre programme et vos objectifs (${patient.objectifs.join(', ')}). Posez-moi vos questions sur vos exercices, votre ressenti, ou demandez des conseils généraux. Si je ne peux pas répondre, je vous proposerai de contacter ${patient.kine_id ? `Dr. ${patient.kine_id}` : 'votre kiné'}.` // Use patient's name and objectives
            };
            setMessages([welcomeMessage]);
       }
-      // Focus input when opening and scroll down
+      // Auto-focus input
       inputRef.current?.focus();
-      scrollToBottom();
-    } else {
-        // Reset chat state when closing - optionally keep history
-        setIsLoading(false);
-        setIsEscalating(false);
-        setInputValue('');
-        setEscalationMessage('');
-        // Keep messages on close: setMessages([]);
-    }
-    // Only re-run when isOpen changes or scrollToBottom changes
-  }, [isOpen, scrollToBottom, patient, messages.length]); // Add patient and messages.length dependency
+  }, [patient]); // Depend on patient data
 
    useEffect(() => {
     // Scroll to bottom when messages change
@@ -120,6 +110,7 @@ export default function PatientChatbotPopup({ patient }: PatientChatbotPopupProp
 
     try {
       // Prepare input for the personalized chatbot flow using patient prop
+       // TODO: Fetch real program summary and feedback dynamically
       const input: PersonalizedPatientChatbotInput = {
         question: userMessage,
         patientContext: {
@@ -128,7 +119,7 @@ export default function PatientChatbotPopup({ patient }: PatientChatbotPopupProp
           condition: patient.pathologies.join(', '),
           goals: patient.objectifs.join(', '),
           currentProgramSummary: "Programme axé renforcement dos/abdos et mobilité épaule.", // Example summary - Fetch this dynamically later
-          // recentFeedbackSummary: "Douleur modérée (5/10) rapportée hier.", // Example feedback summary - Fetch this dynamically later
+          recentFeedbackSummary: undefined, // Fetch dynamically if needed
         },
         physiotherapyKnowledge: mockPhysioKnowledge,
       };
@@ -161,6 +152,7 @@ export default function PatientChatbotPopup({ patient }: PatientChatbotPopupProp
            text: "Désolé, une erreur s'est produite. Veuillez réessayer ou contacter votre kiné directement si le problème persiste."
        };
       setMessages(prev => [...prev, errorMessage]);
+       toast({ title: "Erreur Chatbot", description: "Impossible de contacter l'assistant virtuel.", variant: "destructive"});
     } finally {
       setIsLoading(false);
        setTimeout(() => inputRef.current?.focus(), 0); // Refocus input
@@ -172,7 +164,7 @@ export default function PatientChatbotPopup({ patient }: PatientChatbotPopupProp
       setIsEscalating(true);
       setLastUserQuestion(originalQuestion);
       // Pre-fill escalation message slightly
-      setEscalationMessage(`Bonjour, j'ai demandé au chatbot : "${originalQuestion}". ${botReason ? `Il m'a été suggéré de vous contacter car: "${botReason}". ` : ''} Pourriez-vous m'éclairer ?\n\n[Ajoutez vos détails ici]\n\nMerci,\n${patient.prénom}`);
+      setEscalationMessage(`Bonjour, j'ai demandé à l'assistant : "${originalQuestion}". ${botReason ? `Il m'a été suggéré de vous contacter car : "${botReason}". ` : ''} Pourriez-vous m'éclairer ?\n\n[Ajoutez vos détails ici]\n\nMerci,\n${patient.prénom}`);
    };
 
    const handleCancelEscalation = () => {
@@ -231,34 +223,23 @@ export default function PatientChatbotPopup({ patient }: PatientChatbotPopupProp
 
 
   return (
-    <>
-       {/* Updated Floating Button Style */}
-       <Button
-            onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 z-50 rounded-full py-3 px-4 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground flex items-center gap-2 h-auto text-base transition-all transform hover:scale-105" // Added transitions
-            aria-label="Ouvrir l'assistance patient"
-       >
-           <MessageSquarePlus className="w-5 h-5" />
-           <span>Une question ?</span> {/* Text is now always visible */}
-       </Button>
-
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[450px] p-0 flex flex-col max-h-[80vh] shadow-xl border">
-          <DialogHeader className="p-4 border-b bg-muted/30 flex flex-row items-center gap-3">
-             {/* Bot Icon */}
+    <Card className="shadow-md h-[75vh] flex flex-col"> {/* Use Card and set height */}
+        <CardHeader className="border-b flex flex-row items-center gap-3 p-4">
+            {/* Bot Icon */}
              <Avatar className="w-10 h-10 border-2 border-primary bg-primary/20 text-primary flex-shrink-0">
                  <AvatarFallback><Sparkles className="w-5 h-5" /></AvatarFallback>
              </Avatar>
              <div>
-                <DialogTitle className="text-lg">Assistant Kiné Virtuel</DialogTitle>
-                <DialogDescription className="text-sm">
-                   Posez vos questions ici. Je vous aiderai si possible.
-                </DialogDescription>
+                <CardTitle className="text-lg">Votre Assistant Kiné Personnalisé</CardTitle>
+                <CardDescription className="text-sm">
+                    Il connaît votre programme et vos objectifs. Posez vos questions !
+                </CardDescription>
              </div>
-          </DialogHeader>
+        </CardHeader>
 
-           <ScrollArea className="flex-grow overflow-y-auto p-4 bg-muted/10" ref={scrollAreaRef}>
-             <div className="space-y-4 ">
+        <CardContent className="flex-grow p-0 overflow-hidden"> {/* Content takes remaining space, no padding */}
+           <ScrollArea className="h-full p-4" ref={scrollAreaRef}> {/* ScrollArea fills CardContent */}
+             <div className="space-y-4 pb-4"> {/* Add padding bottom inside scroll area */}
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -326,10 +307,12 @@ export default function PatientChatbotPopup({ patient }: PatientChatbotPopupProp
               )}
              </div>
            </ScrollArea>
+        </CardContent>
 
 
           {isEscalating ? (
-              <div className="p-4 border-t bg-muted/30">
+              // Escalation Input Area
+               <div className="p-4 border-t bg-muted/30">
                   <p className="text-sm font-medium mb-2 text-foreground">Transférer à votre kiné :</p>
                   <Textarea
                       placeholder="Ajoutez des détails si nécessaire..."
@@ -351,7 +334,8 @@ export default function PatientChatbotPopup({ patient }: PatientChatbotPopupProp
                   </div>
               </div>
           ) : (
-              <DialogFooter className="p-4 border-t bg-muted/30">
+               // Normal Chat Input Area
+               <div className="p-4 border-t bg-muted/30">
                  <div className="flex gap-2 w-full items-center">
                   <Input
                     ref={inputRef}
@@ -361,17 +345,15 @@ export default function PatientChatbotPopup({ patient }: PatientChatbotPopupProp
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyPress={handleKeyPress}
                     disabled={isLoading || isEscalating}
-                    aria-label="Entrez votre question pour le chatbot"
+                    aria-label="Entrez votre question pour l'assistant virtuel"
                     className="flex-grow bg-background"
                   />
                   <Button onClick={handleSendMessage} disabled={isLoading || !inputValue.trim() || isEscalating} size="icon" aria-label="Envoyer le message" className="bg-primary hover:bg-primary/90 text-primary-foreground">
                     {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CornerDownLeft className="h-4 w-4" />}
                   </Button>
                  </div>
-              </DialogFooter>
+              </div>
           )}
-        </DialogContent>
-      </Dialog>
-      </>
+    </Card>
   );
 }
