@@ -85,7 +85,7 @@ export default function PatientChatbot({ patient }: PatientChatbotProps) { // De
            const welcomeMessage: ChatMessage = {
                 id: 'welcome',
                 sender: 'bot',
-                text: `Bonjour ${patient.prénom} ! Je suis votre assistant virtuel. Je connais votre programme et vos objectifs (${patient.objectifs.join(', ')}). Posez-moi vos questions sur vos exercices, votre ressenti, ou demandez des conseils généraux. Si je ne peux pas répondre, je vous proposerai de contacter ${patient.kine_id ? `Dr. ${patient.kine_id}` : 'votre kiné'}.` // Use patient's name and objectives
+                text: `Bonjour ${patient.prénom} ! Je suis votre assistant virtuel. Je connais votre programme et vos objectifs (${patient.objectifs.join(', ')}). Posez-moi vos questions sur vos exercices, votre ressenti, ou demandez des conseils généraux. Si je ne peux pas répondre, je vous proposerai de contacter votre kiné.` // Updated welcome message
            };
            setMessages([welcomeMessage]);
       }
@@ -224,17 +224,19 @@ export default function PatientChatbot({ patient }: PatientChatbotProps) { // De
 
   return (
     <Card className="shadow-md h-[75vh] flex flex-col"> {/* Use Card and set height */}
-        <CardHeader className="border-b flex flex-row items-center gap-3 p-4">
-            {/* Bot Icon */}
-             <Avatar className="w-10 h-10 border-2 border-primary bg-primary/20 text-primary flex-shrink-0">
-                 <AvatarFallback><Sparkles className="w-5 h-5" /></AvatarFallback>
-             </Avatar>
-             <div>
-                <CardTitle className="text-lg">Votre Assistant Kiné Personnalisé</CardTitle>
-                <CardDescription className="text-sm">
-                    Il connaît votre programme et vos objectifs. Posez vos questions !
-                </CardDescription>
+        <CardHeader className="border-b flex flex-col p-4 space-y-2"> {/* Changed flex-row to flex-col and added space-y */}
+             <div className="flex items-center gap-3"> {/* Wrap title and icon */}
+                 <Avatar className="w-10 h-10 border-2 border-primary bg-primary/20 text-primary flex-shrink-0">
+                     <AvatarFallback><Sparkles className="w-5 h-5" /></AvatarFallback>
+                 </Avatar>
+                 <div>
+                    <CardTitle className="text-lg">Votre Assistant Kiné Personnalisé</CardTitle>
+                 </div>
              </div>
+             {/* Enhanced Description */}
+              <CardDescription className="text-sm text-muted-foreground leading-relaxed">
+                   Cet assistant est là pour vous guider ! Il connaît <span className='font-semibold text-foreground'>votre programme spécifique</span>, vos <span className='font-semibold text-foreground'>objectifs personnels</span> et les <span className='font-semibold text-foreground'>conseils de votre kiné</span>. N'hésitez pas à lui poser des questions sur un exercice, une douleur ressentie (sans demander de diagnostic médical), ou si vous avez un doute. S'il ne peut pas répondre, il vous proposera de <span className='font-semibold text-foreground'>contacter directement votre kiné</span>.
+              </CardDescription>
         </CardHeader>
 
         <CardContent className="flex-grow p-0 overflow-hidden"> {/* Content takes remaining space, no padding */}

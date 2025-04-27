@@ -123,17 +123,19 @@ export default function KineChatbot({ kine }: KineChatbotProps) {
 
   return (
     <Card className="shadow-md h-[75vh] flex flex-col"> {/* Use Card and set height */}
-        <CardHeader className="border-b flex flex-row items-center gap-3 p-4">
-            {/* Kine-Specific Icon */}
-             <Avatar className="w-10 h-10 border-2 border-accent bg-accent/20 text-accent flex-shrink-0">
-                 <AvatarFallback><DraftingCompass className="w-5 h-5" /></AvatarFallback>
-             </Avatar>
-             <div>
-                <CardTitle className="text-lg">Assistant Kiné IA "Mak"</CardTitle>
-                <CardDescription className="text-sm">
-                    Votre outil IA pour la recherche d'information et l'aide à la décision clinique.
-                </CardDescription>
-             </div>
+        <CardHeader className="border-b flex flex-col p-4 space-y-2"> {/* Changed flex-row to flex-col and added space-y */}
+            <div className="flex items-center gap-3"> {/* Wrap title and icon */}
+                 <Avatar className="w-10 h-10 border-2 border-accent bg-accent/20 text-accent flex-shrink-0">
+                     <AvatarFallback><DraftingCompass className="w-5 h-5" /></AvatarFallback>
+                 </Avatar>
+                 <div>
+                    <CardTitle className="text-lg">Assistant Kiné IA "Mak"</CardTitle>
+                 </div>
+            </div>
+             {/* Enhanced Description */}
+            <CardDescription className="text-sm text-muted-foreground leading-relaxed">
+                 Mak est votre partenaire IA pour une pratique éclairée et efficace. Interrogez-le sur les dernières <span className='font-semibold text-foreground'>recommandations EBP</span>, demandez des <span className='font-semibold text-foreground'>synthèses d'articles</span>, obtenez de l'aide pour la <span className='font-semibold text-foreground'>génération de programmes</span> adaptés ou analysez rapidement les <span className='font-semibold text-foreground'>tendances des feedbacks patients</span>. Gagnez du temps et enrichissez votre expertise.
+            </CardDescription>
         </CardHeader>
 
         <CardContent className="flex-grow p-0 overflow-hidden"> {/* Content takes remaining space, no padding */}
