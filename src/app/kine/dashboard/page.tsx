@@ -19,11 +19,13 @@ import KineCertificationManager from '@/components/kine/kine-certification-manag
 import KineChatbot from '@/components/kine/kine-chatbot'; // Import KineChatbot
 import KineCollaborationHub from '@/components/kine/kine-collaboration-hub'; // Import new component
 import KineReputationDisplay from '@/components/kine/kine-reputation-display'; // Import new component
+import AddExerciseForm from '@/components/kine/add-exercise-form'; // Import AddExerciseForm
+import ProgramGenerator from '@/components/kine/program-generator'; // Import ProgramGenerator
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import type { Patient, Kine, Feedback, MessageToKine, ShopProgram, BlogPost, RehabProtocol, CertificationBadge } from '@/interfaces';
+import type { Patient, Kine, Feedback, MessageToKine, ShopProgram, BlogPost, RehabProtocol, CertificationBadge, Exercise } from '@/interfaces';
 import { mockFeedbacks } from '@/components/kine/mock-data';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Award, ChevronDown, ChevronUp, Bot, Share2, Star, Trophy, Users, BarChart3, Crown } from 'lucide-react'; // Import new icons, removed Layers
+import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Award, ChevronDown, ChevronUp, Bot, Share2, Star, Trophy, Users, BarChart3, Crown, Dumbbell, Cog } from 'lucide-react'; // Added Dumbbell, Cog
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import KineCertificationDisplay from '@/components/patient/kine-certification-display'; // Import display component (can reuse)
@@ -55,14 +57,15 @@ const mockAvailableBadges: CertificationBadge[] = [
     ...(initialMockKine.certifications || []), // Include earned ones
     { id: 'cert4', name: 'Créateur Marketplace', description: 'A publié son premier programme sur la marketplace.', dateAwarded: '', pointsRequired: 1500 },
     { id: 'cert5', name: 'Mentor Patient', description: 'A suivi plus de 10 patients actifs simultanément.', dateAwarded: '', pointsRequired: 3000 },
+    { id: 'cert_exo_add', name: 'Architecte d\'Exercices', description: 'A ajouté son premier exercice personnalisé à la base de données.', dateAwarded: '', pointsRequired: 200 }, // New badge for adding exercises
 ];
 
 
 const initialMockPatients: Patient[] = [
-    { id: 'patientTest', nom: 'Dupont', prénom: 'Jean', email: 'jean.dupont@email.com', date_naissance: '1985-03-15', pathologies: ['Lombalgie chronique', 'Tendinopathie épaule droite'], remarques: 'Motivé mais craint la douleur.', kine_id: 'kineTest1', objectifs: ['Amélioration de la mobilité lombaire', 'Reprise progressive de la course à pied'], subscriptionEndDate: new Date(Date.now() + 86400000 * 10).toISOString(), subscriptionStatus: 'active', adherenceRatingByKine: 85, pseudo: 'JeanD85' },
-    { id: 'patientTest2', nom: 'Martin', prénom: 'Claire', email: 'claire.martin@email.com', date_naissance: '1992-07-22', pathologies: ['Entorse cheville gauche (récente)'], remarques: 'Sportive (Volley), veut reprendre rapidement.', kine_id: 'kineTest1', objectifs: ['Récupération complète mobilité cheville', 'Renforcement musculaire préventif'], subscriptionEndDate: new Date(Date.now() + 86400000 * 5).toISOString(), subscriptionStatus: 'active', adherenceRatingByKine: 95, pseudo: 'ClaireM' },
-    { id: 'patientTest3', nom: 'Petit', prénom: 'Lucas', email: 'lucas.petit@email.com', date_naissance: '2005-11-10', pathologies: ['Syndrome rotulien genou droit'], remarques: 'Jeune footballeur, en pleine croissance.', kine_id: 'kineTest1', objectifs: ['Diminution douleur pendant effort', 'Correction posture/gestuelle'], subscriptionEndDate: new Date(Date.now() - 86400000 * 2).toISOString(), subscriptionStatus: 'expired', adherenceRatingByKine: 70, pseudo: 'LucasP' },
-    { id: 'patientTest4', nom: 'Dubois', prénom: 'Marie', email: 'marie.dubois@email.com', date_naissance: '1978-12-01', pathologies: ['Arthrose cervicale'], remarques: 'Sédentaire, cherche à soulager les douleurs.', kine_id: 'kineTest1', objectifs: ['Augmenter la mobilité cervicale', 'Réduire les céphalées de tension'], subscriptionEndDate: new Date(Date.now() + 86400000 * 45).toISOString(), subscriptionStatus: 'active', adherenceRatingByKine: 90, pseudo: 'MarieD' },
+    { id: 'patientTest', nom: 'Dupont', prénom: 'Jean', email: 'jean.dupont@email.com', date_naissance: '1985-03-15', pathologies: ['Lombalgie chronique', 'Tendinopathie épaule droite'], remarques: 'Motivé mais craint la douleur. Utilise des haltères de 5kg et élastiques rouges.', kine_id: 'kineTest1', objectifs: ['Amélioration de la mobilité lombaire', 'Reprise progressive de la course à pied'], subscriptionEndDate: new Date(Date.now() + 86400000 * 10).toISOString(), subscriptionStatus: 'active', adherenceRatingByKine: 85, pseudo: 'JeanD85' },
+    { id: 'patientTest2', nom: 'Martin', prénom: 'Claire', email: 'claire.martin@email.com', date_naissance: '1992-07-22', pathologies: ['Entorse cheville gauche (récente)'], remarques: 'Sportive (Volley), veut reprendre rapidement. Possède tapis de sol.', kine_id: 'kineTest1', objectifs: ['Récupération complète mobilité cheville', 'Renforcement musculaire préventif'], subscriptionEndDate: new Date(Date.now() + 86400000 * 5).toISOString(), subscriptionStatus: 'active', adherenceRatingByKine: 95, pseudo: 'ClaireM' },
+    { id: 'patientTest3', nom: 'Petit', prénom: 'Lucas', email: 'lucas.petit@email.com', date_naissance: '2005-11-10', pathologies: ['Syndrome rotulien genou droit'], remarques: 'Jeune footballeur, en pleine croissance. Aucun matériel spécifique.', kine_id: 'kineTest1', objectifs: ['Diminution douleur pendant effort', 'Correction posture/gestuelle'], subscriptionEndDate: new Date(Date.now() - 86400000 * 2).toISOString(), subscriptionStatus: 'expired', adherenceRatingByKine: 70, pseudo: 'LucasP' },
+    { id: 'patientTest4', nom: 'Dubois', prénom: 'Marie', email: 'marie.dubois@email.com', date_naissance: '1978-12-01', pathologies: ['Arthrose cervicale'], remarques: 'Sédentaire, cherche à soulager les douleurs. Dispose d\'un ballon de gym.', kine_id: 'kineTest1', objectifs: ['Augmenter la mobilité cervicale', 'Réduire les céphalées de tension'], subscriptionEndDate: new Date(Date.now() + 86400000 * 45).toISOString(), subscriptionStatus: 'active', adherenceRatingByKine: 90, pseudo: 'MarieD' },
 ];
 
 const mockMessages: MessageToKine[] = [
@@ -95,6 +98,12 @@ const mockKineRankings = [
     { kineId: 'kineTestX', rank: 2, area: 'Rééducation Genou - Paris' },
     { kineId: 'kineTestY', rank: 1, area: 'Rééducation Épaule - Lyon' },
 ];
+
+// Mock Exercise Database
+const mockExerciseDatabase: Exercise[] = [
+    { id: 'ex_base1', nom: 'Squat Classique', description: 'Flexion des genoux...', niveau: 'débutant', catégorie: 'renforcement', goals: ['Renfo cuisses', 'Mobilité hanche'], defaultDosage: { séries: 3, répétitions: 15 } },
+    { id: 'ex_base2', nom: 'Étirement Ischio-jambiers Debout', description: '...', niveau: 'débutant', catégorie: 'étirement', goals: ['Gain souplesse'], defaultDosage: { séries: 2, répétitions: 30 } },
+];
 // --- End Mock Data ---
 
 
@@ -113,6 +122,7 @@ export default function KineDashboard() {
   const [shopPrograms, setShopPrograms] = useState<ShopProgram[]>(mockKineShopPrograms);
   const [kineBlogPosts] = useState<BlogPost[]>(mockKineBlogPosts); // Assuming read-only for now
   const [certifications, setCertifications] = useState<CertificationBadge[]>(initialMockKine.certifications || []);
+  const [exerciseDatabase, setExerciseDatabase] = useState<Exercise[]>(mockExerciseDatabase); // State for exercise DB
 
   // Gamification state
   const [currentPoints, setCurrentPoints] = useState(initialMockKine.progressPoints || 0);
@@ -254,6 +264,45 @@ export default function KineDashboard() {
   };
   // --- End Share Kine Progress ---
 
+  // --- Handle Add Exercise ---
+  const handleAddExercise = (newExerciseData: Omit<Exercise, 'id' | 'image_url' | 'video_url'>) => {
+       const newExercise: Exercise = {
+           ...newExerciseData,
+           id: `ex_kine${exerciseDatabase.length + 1}`, // Simple unique ID for mock
+           // URLs would be added after successful upload in real app
+       };
+       console.log("Simulating adding exercise to database:", newExercise);
+       setExerciseDatabase(prev => [...prev, newExercise]);
+       // Simulate earning points
+       if (kineData) {
+           const pointsEarned = 30;
+           setKineData(prev => prev ? ({ ...prev, progressPoints: (prev.progressPoints || 0) + pointsEarned }) : prev);
+           toast({ title: "Activité enregistrée !", description: `Vous avez gagné ${pointsEarned} points pour l'ajout d'un exercice.` });
+           // Check for badge
+           if (!certifications.some(c => c.id === 'cert_exo_add')) {
+                const newBadge = mockAvailableBadges.find(b => b.id === 'cert_exo_add');
+                if(newBadge) {
+                     setKineData(prev => prev ? ({ ...prev, certifications: [...(prev.certifications || []), {...newBadge, dateAwarded: new Date().toISOString() }] }) : prev);
+                     toast({ title: "Badge Débloqué !", description: `Nouveau badge : ${newBadge.name}` });
+                }
+           }
+       }
+       toast({ title: "Exercice Ajouté (Simulation)", description: `L'exercice "${newExercise.nom}" a été ajouté à la base.` });
+       // TODO: Switch tab back to exercise list? or clear form
+  };
+  // --- End Handle Add Exercise ---
+
+  // --- Handle Program Generated ---
+  const handleProgramGenerated = (programDetails: any) => {
+       console.log("AI Generated Program Received by Dashboard:", programDetails);
+       // TODO: Process the raw programDetails (string or object based on Genkit flow output)
+       // - Parse the string into a structured Program object
+       // - Potentially pre-fill an "Assign Program" form or display it for review
+       // - Save the generated program to Firestore (or a temporary state before assignment)
+       toast({ title: "Programme Prêt (Prévisualisation)", description: "Le programme généré est affiché ci-dessous." });
+  }
+   // --- End Handle Program Generated ---
+
 
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
   const selectedPatientName = selectedPatient ? `${selectedPatient.prénom} ${selectedPatient.nom}` : 'le patient sélectionné';
@@ -289,7 +338,7 @@ export default function KineDashboard() {
                          {nextBadge && nextBadge.pointsRequired && (
                             <div className="flex items-center gap-1.5 text-xs">
                                 <Trophy className="w-4 h-4 text-indigo-500" />
-                                <span>{nextBadge.pointsRequired - currentPoints} pts pour "{nextBadge.name}"</span>
+                                <span>{nextBadge.pointsRequired - currentPoints > 0 ? `${nextBadge.pointsRequired - currentPoints} pts pour "${nextBadge.name}"` : 'Badge suivant atteint !'}</span>
                             </div>
                          )}
                          <Button
@@ -376,15 +425,17 @@ export default function KineDashboard() {
 
       {/* Main Dashboard */}
       <Tabs defaultValue="patients" className="w-full">
-        {/* Updated grid columns and added KinéHub tab */}
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 mb-6">
-            <TabsTrigger value="patients"><UserCheck className="w-4 h-4 mr-2"/>Gestion Patients</TabsTrigger>
-            <TabsTrigger value="chatbot"><Bot className="w-4 h-4 mr-2"/>Chatbot Mak</TabsTrigger>
-            <TabsTrigger value="collaboration"><Users className="w-4 h-4 mr-2"/>KinéHub Collab</TabsTrigger> {/* New KinéHub Tab */}
-            <TabsTrigger value="reputation"><BarChart3 className="w-4 h-4 mr-2"/>KinéHub Réputation</TabsTrigger> {/* New Reputation Tab */}
-            <TabsTrigger value="marketplace"><Store className="w-4 h-4 mr-2"/>Marketplace</TabsTrigger>
-            <TabsTrigger value="blog"><BookOpen className="w-4 h-4 mr-2"/>Blog Pro</TabsTrigger>
-            <TabsTrigger value="certifications"><Award className="w-4 h-4 mr-2"/>Badges Pro</TabsTrigger>
+        {/* Updated grid columns and added new tabs */}
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-9 mb-6"> {/* Adjusted grid columns */}
+            <TabsTrigger value="patients"><UserCheck className="w-4 h-4 mr-1 md:mr-2"/>Gestion Patients</TabsTrigger>
+            <TabsTrigger value="generation"><Cog className="w-4 h-4 mr-1 md:mr-2"/>Gén. Programme</TabsTrigger> {/* New Tab */}
+            <TabsTrigger value="exercices"><Dumbbell className="w-4 h-4 mr-1 md:mr-2"/>Base Exercices</TabsTrigger> {/* New Tab */}
+            <TabsTrigger value="chatbot"><Bot className="w-4 h-4 mr-1 md:mr-2"/>Chatbot Mak</TabsTrigger>
+            <TabsTrigger value="collaboration"><Users className="w-4 h-4 mr-1 md:mr-2"/>KinéHub Collab</TabsTrigger>
+            <TabsTrigger value="reputation"><BarChart3 className="w-4 h-4 mr-1 md:mr-2"/>KinéHub Réputation</TabsTrigger>
+            <TabsTrigger value="marketplace"><Store className="w-4 h-4 mr-1 md:mr-2"/>Marketplace</TabsTrigger>
+            <TabsTrigger value="blog"><BookOpen className="w-4 h-4 mr-1 md:mr-2"/>Blog Pro</TabsTrigger>
+            <TabsTrigger value="certifications"><Award className="w-4 h-4 mr-1 md:mr-2"/>Badges Pro</TabsTrigger>
         </TabsList>
 
         {/* Patient Management Tab */}
@@ -446,6 +497,47 @@ export default function KineDashboard() {
                 </Card>
               )}
         </TabsContent>
+
+         {/* Program Generation Tab */}
+         <TabsContent value="generation">
+            {selectedPatientId && selectedPatient && kineData ? (
+                 <ProgramGenerator
+                    patient={selectedPatient}
+                    kine={kineData}
+                    onProgramGenerated={handleProgramGenerated}
+                 />
+            ) : (
+                 <Card>
+                     <CardContent className="p-6 text-center text-muted-foreground">
+                         Sélectionnez un patient pour générer un programme.
+                     </CardContent>
+                 </Card>
+            )}
+         </TabsContent>
+
+          {/* Exercise Database Tab */}
+         <TabsContent value="exercices">
+             <AddExerciseForm onExerciseAdded={handleAddExercise} />
+             {/* TODO: Add a component to display/edit existing exercises in the database */}
+             <Card className="mt-6 shadow-md">
+                <CardHeader>
+                    <CardTitle>Exercices Existants</CardTitle>
+                    <CardDescription>Liste des exercices actuellement dans la base de données.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     {exerciseDatabase.length > 0 ? (
+                         <ul className="space-y-2">
+                             {exerciseDatabase.map(ex => (
+                                 <li key={ex.id} className="text-sm p-2 border rounded-md bg-muted/30">{ex.nom} ({ex.catégorie} - {ex.niveau})</li>
+                             ))}
+                         </ul>
+                     ) : (
+                         <p className="text-muted-foreground">Aucun exercice personnalisé ajouté.</p>
+                     )}
+                </CardContent>
+             </Card>
+         </TabsContent>
+
 
          {/* Kine Chatbot Tab */}
          <TabsContent value="chatbot">

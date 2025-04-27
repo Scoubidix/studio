@@ -5,17 +5,24 @@ export interface Exercise {
   nom: string;
   description: string;
   detailed_steps?: string[]; // Added for detailed view
-  image_url?: string;
-  video_url?: string;
+  goals?: string[]; // Added for exercise goals
+  image_url?: string; // Added field
+  video_url?: string; // Added field
   niveau: 'débutant' | 'intermédiaire' | 'avancé';
   catégorie: 'renforcement' | 'mobilité' | 'étirement';
   contre_indications?: string[];
+  defaultDosage?: { // Added for base dosage
+      séries?: number;
+      répétitions?: number;
+      fréquence?: string; // e.g., "3 fois/semaine" - Keep frequency optional here
+  };
 }
 
 export interface ProgramExercise {
   exercice_id: string;
   séries: number;
   répétitions: number;
+  fréquence?: string; // Optional frequency per exercise in program
   exerciseDetails?: Exercise; // Optional: populated when fetching full program details
 }
 
@@ -25,6 +32,10 @@ export interface Program {
   liste_exercices: ProgramExercise[];
   statut: 'actif' | 'terminé' | 'suspendu';
   date_creation: string;
+  // Optional fields from generation input
+  equipment?: string[];
+  workoutDays?: string[];
+  programGoals?: string; // Goals specific to this generated program
 }
 
 export interface Feedback {
@@ -178,5 +189,32 @@ export interface ProgressTestResult {
     results: { metricName: string; value: number | string }[];
     notes?: string;
 }
+
+// For Program Generation AI Input
+export interface ProgramGenerationInput {
+  patientCondition: string;
+  patientGoals: string;
+  patientLimitations: string;
+  kineSpecialty: string;
+  availableEquipment: string[]; // e.g., ["Elastiques", "Haltères"]
+  workoutDays: string[]; // e.g., ["Lundi", "Mercredi", "Vendredi"]
+  specificRemarks?: string;
+}
+
+// For Add Exercise Form Data (subset of Exercise interface)
+export interface AddExerciseFormData {
+  nom: string;
+  description: string;
+  detailed_steps: { value: string }[]; // Use field array structure
+  goals: { value: string }[]; // Use field array structure
+  niveau: 'débutant' | 'intermédiaire' | 'avancé';
+  catégorie: 'renforcement' | 'mobilité' | 'étirement';
+  contre_indications?: string; // Store as comma-separated string in form
+  // videoFile?: File | null; // For file upload
+  // imageFile?: File | null; // For file upload
+  defaultSéries?: number;
+  defaultRépétitions?: number;
+}
+
 
     
