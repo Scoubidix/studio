@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Import Tabs
-import { Program, Exercise, ProgramExercise, Feedback, Patient, Kine, BlogPost, ShopProgram, ProgressTest, CertificationBadge } from "@/interfaces"; // Import needed interfaces
+import { Program, Exercise, ProgramExercise, Feedback, Patient, Kine, BlogPost, ShopProgram, ProgressTest, CertificationBadge, PatientBadge } from "@/interfaces"; // Import needed interfaces
 import FeedbackForm from '@/components/patient/feedback-form';
 import PatientChatbot from '@/components/patient/patient-chatbot'; // Renamed import
 import ExerciseDetailModal from '@/components/patient/exercise-detail-modal';
@@ -16,8 +16,9 @@ import BlogDisplay from '@/components/shared/blog-display'; // Import shared com
 import ShopDisplay from '@/components/patient/shop-display'; // Import new component
 import ProgressTestDisplay from '@/components/patient/progress-test-display'; // Import new component
 import KineCertificationDisplay from '@/components/patient/kine-certification-display'; // Import new component
+import PatientBadgesDisplay from '@/components/patient/patient-badges-display'; // Import new component
 import Image from 'next/image';
-import { Dumbbell, Activity, StretchVertical, Trophy, CalendarDays, ArrowRight, Target, Share2, BookOpen, Microscope, ShoppingBag, ClipboardCheck, Award, BarChart, MessageSquarePlus, Bot } from 'lucide-react'; // Added Bot
+import { Dumbbell, Activity, StretchVertical, Trophy, CalendarDays, ArrowRight, Target, Share2, BookOpen, Microscope, ShoppingBag, ClipboardCheck, Award, BarChart, Bot, Medal } from 'lucide-react'; // Added Bot, Medal
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -39,6 +40,13 @@ const mockProgram: Program = {
   statut: 'actif', date_creation: new Date().toISOString(),
 };
 
+// Mock Patient Badges
+const mockPatientBadges: PatientBadge[] = [
+    { id: 'pbadge1', name: 'Sérieux Confirmé', description: "10 séances complétées d'affilée !", dateAwarded: '2024-07-22T00:00:00.000Z', icon: 'Medal'},
+    { id: 'pbadge2', name: 'Pro du Feedback', description: "5 feedbacks détaillés envoyés !", dateAwarded: '2024-07-18T00:00:00.000Z', icon: 'Medal'},
+];
+
+
 const mockPatientData: Patient = {
   id: 'patientTest', nom: 'Dupont', prénom: 'Jean', email: 'jean.dupont@email.com',
   date_naissance: '1985-03-15', pathologies: ['Lombalgie chronique'],
@@ -47,23 +55,26 @@ const mockPatientData: Patient = {
   purchasedProgramIds: ['shopProg1'], // Example purchased program
   progressPoints: 1250, // Mock points
   pseudo: 'JeanD85', // Mock pseudo
+  adherenceRatingByKine: 85, // Mock adherence rating
+  badges: mockPatientBadges, // Assign mock badges
 };
 
 // Mock data for Kines, including the one assigned to the patient and potential shop creators
 const mockKines: Kine[] = [
     {
         id: 'kineTest1', nom: 'Leroy', prénom: 'Sophie', email: 'sophie.leroy@kine.fr',
-        spécialité: 'Sport',
+        spécialité: 'Sport', ville: 'Paris',
         certifications: [
             { id: 'cert1', name: 'Expert Rééducation Épaule', description: 'Formation avancée sur la rééducation de l\'épaule.', dateAwarded: '2023-05-15T00:00:00.000Z', icon: 'Award' },
             { id: 'cert2', name: 'Spécialiste Course à Pied', description: 'Certification en biomécanique et prévention des blessures du coureur.', dateAwarded: '2024-01-20T00:00:00.000Z', icon: 'Award' },
              { id: 'cert_shop', name: 'Créateur Marketplace', description: 'A publié des programmes sur la marketplace.', dateAwarded: '2024-07-25T00:00:00.000Z', icon: 'Award' }, // Added badge for shop
+             { id: 'superkine1', name: 'SuperKiné 2024', description: 'Excellente satisfaction patient et utilisation de l\'outil.', dateAwarded: '2024-08-01T00:00:00.000Z', icon: 'Award', isSuperKineBadge: true }, // SuperKiné badge example
         ],
         progressPoints: 1500,
     },
     {
         id: 'kineTest2', nom: 'Dubois', prénom: 'Alain', email: 'alain.dubois@kine.fr',
-        spécialité: 'Pédiatrie',
+        spécialité: 'Pédiatrie', ville: 'Lyon',
         certifications: [
             { id: 'cert3', name: 'Kiné Pédiatrique Certifié', description: 'Certification en kinésithérapie pédiatrique.', dateAwarded: '2022-11-01T00:00:00.000Z', icon: 'Award' },
         ],
@@ -125,7 +136,7 @@ const mockRewards = [
 
 const getExerciseDetails = (exerciseId: string): Exercise | undefined => mockExercises.find(ex => ex.id === exerciseId);
 const populatedProgramExercises: ProgramExercise[] = mockProgram.liste_exercices.map(progEx => ({ ...progEx, exerciseDetails: getExerciseDetails(progEx.exercice_id) }));
-const motivationalQuotes = [ "Chaque petit pas compte.", "La persévérance est la clé."];
+const motivationalQuotes = [ "Chaque petit pas compte.", "La persévérance est la clé."]; // Corrected: No ellipsis inside quotes
 
 const getCategoryIcon = (category: Exercise['catégorie']) => {
   switch (category) {
@@ -146,6 +157,7 @@ export default function PatientDashboard() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [patientGoals, setPatientGoals] = useState<string[]>(mockPatientData.objectifs);
   const [kineCertifications, setKineCertifications] = useState<CertificationBadge[]>(mockKineData.certifications || []); // State for certifications
+  const [patientBadges, setPatientBadges] = useState<PatientBadge[]>(mockPatientData.badges || []); // State for patient badges
   const [currentPoints, setCurrentPoints] = useState(mockPatientData.progressPoints || 0); // Gamification points
   const { toast } = useToast();
 
@@ -165,6 +177,12 @@ export default function PatientDashboard() {
     setMotivationalQuote(motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]);
     toast({ title: "Feedback envoyé !", description: `Vous avez gagné ${pointsEarned} points !`});
     console.log("Gamification state updated (simulated)");
+    // Simulate earning a badge
+    if (totalSessions + 1 === 16 && !patientBadges.some(b => b.id === 'pbadge_16sessions')) {
+        const newBadge: PatientBadge = { id: 'pbadge_16sessions', name: 'Persévérance Paye', description: '16 séances complétées !', dateAwarded: new Date().toISOString(), icon: 'Medal' };
+        setPatientBadges(prev => [...prev, newBadge]);
+        toast({ title: "Badge Débloqué !", description: `Nouveau badge : ${newBadge.name}` });
+    }
   };
 
   const handleExerciseClick = (exercise: Exercise) => {
@@ -233,7 +251,7 @@ export default function PatientDashboard() {
                   </div>
                )}
            </div>
-            <div className="flex flex-col items-end gap-2 flex-shrink-0">
+            <div className="flex flex-col items-end gap-4 flex-shrink-0"> {/* Increased gap */}
                  <div className="flex items-center gap-4"> {/* Container for trophy and share */}
                      <div className="text-right">
                          <div className="flex items-center gap-2 justify-end">
@@ -256,8 +274,10 @@ export default function PatientDashboard() {
                         Partager
                       </Button>
                  </div>
-                 {/* Kine Certifications Display */}
-                  <KineCertificationDisplay certifications={kineCertifications} kineName={`${mockKineData.prénom} ${mockKineData.nom}`} />
+                 {/* Patient Badges Display */}
+                 <PatientBadgesDisplay badges={patientBadges} />
+                 {/* Kine Certifications Display (shows Kine's badges including SuperKine) */}
+                 <KineCertificationDisplay certifications={kineCertifications} kineName={`${mockKineData.prénom} ${mockKineData.nom}`} />
             </div>
       </div>
 
@@ -436,9 +456,6 @@ export default function PatientDashboard() {
         </TabsContent>
       </Tabs>
 
-
-      {/* Patient Chatbot Popup Trigger - REMOVED */}
-      {/* {mockPatientData && <PatientChatbotPopup patient={mockPatientData} />} */}
 
       {/* Exercise Detail Modal */}
       {selectedExercise && (

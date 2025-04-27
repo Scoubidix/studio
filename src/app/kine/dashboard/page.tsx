@@ -15,26 +15,28 @@ import NotificationArea from '@/components/kine/notification-area';
 import AddPatientModal from '@/components/kine/add-patient-modal';
 import MarketplaceManager from '@/components/kine/marketplace-manager'; // Import new component
 import BlogDisplay from '@/components/shared/blog-display'; // Import shared BlogDisplay
-// import TemplateBrowser from '@/components/kine/template-browser'; // Removed template browser import
 import KineCertificationManager from '@/components/kine/kine-certification-manager'; // Import new component
 import KineChatbot from '@/components/kine/kine-chatbot'; // Import KineChatbot
+import KineCollaborationHub from '@/components/kine/kine-collaboration-hub'; // Import new component
+import KineReputationDisplay from '@/components/kine/kine-reputation-display'; // Import new component
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import type { Patient, Kine, Feedback, MessageToKine, ShopProgram, BlogPost, RehabProtocol, CertificationBadge } from '@/interfaces';
 import { mockFeedbacks } from '@/components/kine/mock-data';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Award, ChevronDown, ChevronUp, Bot, Share2, Star, Trophy } from 'lucide-react'; // Import new icons, removed Layers
+import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Award, ChevronDown, ChevronUp, Bot, Share2, Star, Trophy, Users, BarChart3, Crown } from 'lucide-react'; // Import new icons, removed Layers
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import KineCertificationDisplay from '@/components/patient/kine-certification-display'; // Import display component (can reuse)
 
 // --- Mock Data (Initial Data - now managed by state) ---
 const initialMockKine: Kine = {
-    id: 'kineTest1', nom: 'Leroy', prénom: 'Sophie', email: 'sophie.leroy@kine.fr', spécialité: 'Sport',
+    id: 'kineTest1', nom: 'Leroy', prénom: 'Sophie', email: 'sophie.leroy@kine.fr', spécialité: 'Sport', ville: 'Paris',
     progressPoints: 850, // Add mock points for Kine
     certifications: [ // Add mock certifications with pointsRequired
         { id: 'cert1', name: 'Expert Rééducation Épaule', description: 'Formation avancée sur la rééducation de l\'épaule.', dateAwarded: '2023-05-15T00:00:00.000Z', icon: 'Award', pointsRequired: 1000 },
         { id: 'cert2', name: 'Spécialiste Course à Pied', description: 'Certification en biomécanique et prévention des blessures du coureur.', dateAwarded: '2024-01-20T00:00:00.000Z', icon: 'Award', pointsRequired: 2500 },
         { id: 'cert3', name: 'Contributeur Blog Pro', description: 'A rédigé des articles pour le blog professionnel.', dateAwarded: '2024-07-10T00:00:00.000Z', icon: 'Award', pointsRequired: 500 }, // Example activity badge
+        { id: 'superkine1', name: 'SuperKiné 2024', description: 'Excellente satisfaction patient et utilisation de l\'outil.', dateAwarded: '2024-08-01T00:00:00.000Z', icon: 'Crown', isSuperKineBadge: true }, // SuperKiné badge example
     ]
 };
 
@@ -46,7 +48,7 @@ const findNextBadge = (kine: Kine | null): CertificationBadge | null => {
     if (unearnedBadges.length === 0) return null;
     unearnedBadges.sort((a, b) => (a.pointsRequired || Infinity) - (b.pointsRequired || Infinity));
     return unearnedBadges[0];
-}
+};
 
 // Assume a list of all possible badges exists somewhere
 const mockAvailableBadges: CertificationBadge[] = [
@@ -57,10 +59,10 @@ const mockAvailableBadges: CertificationBadge[] = [
 
 
 const initialMockPatients: Patient[] = [
-    { id: 'patientTest', nom: 'Dupont', prénom: 'Jean', email: 'jean.dupont@email.com', date_naissance: '1985-03-15', pathologies: ['Lombalgie chronique', 'Tendinopathie épaule droite'], remarques: 'Motivé mais craint la douleur.', kine_id: 'kineTest1', objectifs: ['Amélioration de la mobilité lombaire', 'Reprise progressive de la course à pied'], subscriptionEndDate: new Date(Date.now() + 86400000 * 10).toISOString(), subscriptionStatus: 'active' },
-    { id: 'patientTest2', nom: 'Martin', prénom: 'Claire', email: 'claire.martin@email.com', date_naissance: '1992-07-22', pathologies: ['Entorse cheville gauche (récente)'], remarques: 'Sportive (Volley), veut reprendre rapidement.', kine_id: 'kineTest1', objectifs: ['Récupération complète mobilité cheville', 'Renforcement musculaire préventif'], subscriptionEndDate: new Date(Date.now() + 86400000 * 5).toISOString(), subscriptionStatus: 'active' },
-    { id: 'patientTest3', nom: 'Petit', prénom: 'Lucas', email: 'lucas.petit@email.com', date_naissance: '2005-11-10', pathologies: ['Syndrome rotulien genou droit'], remarques: 'Jeune footballeur, en pleine croissance.', kine_id: 'kineTest1', objectifs: ['Diminution douleur pendant effort', 'Correction posture/gestuelle'], subscriptionEndDate: new Date(Date.now() - 86400000 * 2).toISOString(), subscriptionStatus: 'expired' },
-    { id: 'patientTest4', nom: 'Dubois', prénom: 'Marie', email: 'marie.dubois@email.com', date_naissance: '1978-12-01', pathologies: ['Arthrose cervicale'], remarques: 'Sédentaire, cherche à soulager les douleurs.', kine_id: 'kineTest1', objectifs: ['Augmenter la mobilité cervicale', 'Réduire les céphalées de tension'], subscriptionEndDate: new Date(Date.now() + 86400000 * 45).toISOString(), subscriptionStatus: 'active' },
+    { id: 'patientTest', nom: 'Dupont', prénom: 'Jean', email: 'jean.dupont@email.com', date_naissance: '1985-03-15', pathologies: ['Lombalgie chronique', 'Tendinopathie épaule droite'], remarques: 'Motivé mais craint la douleur.', kine_id: 'kineTest1', objectifs: ['Amélioration de la mobilité lombaire', 'Reprise progressive de la course à pied'], subscriptionEndDate: new Date(Date.now() + 86400000 * 10).toISOString(), subscriptionStatus: 'active', adherenceRatingByKine: 85, pseudo: 'JeanD85' },
+    { id: 'patientTest2', nom: 'Martin', prénom: 'Claire', email: 'claire.martin@email.com', date_naissance: '1992-07-22', pathologies: ['Entorse cheville gauche (récente)'], remarques: 'Sportive (Volley), veut reprendre rapidement.', kine_id: 'kineTest1', objectifs: ['Récupération complète mobilité cheville', 'Renforcement musculaire préventif'], subscriptionEndDate: new Date(Date.now() + 86400000 * 5).toISOString(), subscriptionStatus: 'active', adherenceRatingByKine: 95, pseudo: 'ClaireM' },
+    { id: 'patientTest3', nom: 'Petit', prénom: 'Lucas', email: 'lucas.petit@email.com', date_naissance: '2005-11-10', pathologies: ['Syndrome rotulien genou droit'], remarques: 'Jeune footballeur, en pleine croissance.', kine_id: 'kineTest1', objectifs: ['Diminution douleur pendant effort', 'Correction posture/gestuelle'], subscriptionEndDate: new Date(Date.now() - 86400000 * 2).toISOString(), subscriptionStatus: 'expired', adherenceRatingByKine: 70, pseudo: 'LucasP' },
+    { id: 'patientTest4', nom: 'Dubois', prénom: 'Marie', email: 'marie.dubois@email.com', date_naissance: '1978-12-01', pathologies: ['Arthrose cervicale'], remarques: 'Sédentaire, cherche à soulager les douleurs.', kine_id: 'kineTest1', objectifs: ['Augmenter la mobilité cervicale', 'Réduire les céphalées de tension'], subscriptionEndDate: new Date(Date.now() + 86400000 * 45).toISOString(), subscriptionStatus: 'active', adherenceRatingByKine: 90, pseudo: 'MarieD' },
 ];
 
 const mockMessages: MessageToKine[] = [
@@ -80,8 +82,19 @@ const mockKineBlogPosts: BlogPost[] = [
      { id: 'kblog2', title: 'Tendinopathies d\'Achille : Approches Thérapeutiques Actuelles', summary: 'Synthèse des données sur la prise en charge des tendinopathies achilléennes, focus sur les exercices excentriques, ondes de choc et thérapie manuelle.', publishDate: '2024-07-18T00:00:00.000Z', tags: ['tendinopathie', 'achille', 'rééducation', 'evidence-based'], author: 'Dr. Alain Dubois', contentUrl: '#', imageUrl: 'https://picsum.photos/seed/achilles/300/150' },
      { id: 'kblog3', title: 'Syndrome Douloureux Fémoro-Patellaire : Diagnostic et Traitement', summary: 'Critères diagnostiques et revue des interventions efficaces (renforcement quadricipital et fessier, taping, orthèses plantaires).', publishDate: '2024-06-10T00:00:00.000Z', tags: ['genou', 'SDFP', 'syndrome rotulien', 'diagnostic', 'traitement'], author: 'Dr. Sophie Leroy', contentUrl: '#', imageUrl: 'https://picsum.photos/seed/pfps/300/150' },
 ];
-// Removed mockRehabProtocols as the tab is removed
-// const mockRehabProtocols: RehabProtocol[] = [ ... ];
+
+// Mock other Kines for collaboration examples
+const mockOtherKines: Kine[] = [
+    { id: 'kineTest2', nom: 'Dubois', prénom: 'Alain', email: 'alain.dubois@kine.fr', spécialité: 'Pédiatrie', ville: 'Paris' },
+    { id: 'kineTest3', nom: 'Garcia', prénom: 'Maria', email: 'maria.garcia@kine.fr', spécialité: 'Neurologie', ville: 'Lyon' },
+];
+
+// Mock Kine Rankings (replace with actual data/logic)
+const mockKineRankings = [
+    { kineId: 'kineTest1', rank: 1, area: 'Rééducation Genou - Paris' },
+    { kineId: 'kineTestX', rank: 2, area: 'Rééducation Genou - Paris' },
+    { kineId: 'kineTestY', rank: 1, area: 'Rééducation Épaule - Lyon' },
+];
 // --- End Mock Data ---
 
 
@@ -98,10 +111,7 @@ export default function KineDashboard() {
 
   // Data states for new Kine features
   const [shopPrograms, setShopPrograms] = useState<ShopProgram[]>(mockKineShopPrograms);
-  // Blog posts state now uses kine-specific blog posts
   const [kineBlogPosts] = useState<BlogPost[]>(mockKineBlogPosts); // Assuming read-only for now
-  // Removed protocols state
-  // const [rehabProtocols] = useState<RehabProtocol[]>(mockRehabProtocols);
   const [certifications, setCertifications] = useState<CertificationBadge[]>(initialMockKine.certifications || []);
 
   // Gamification state
@@ -146,6 +156,20 @@ export default function KineDashboard() {
         const index = mockMessages.findIndex(m => m.id === messageId);
         if (index > -1) mockMessages[index].status = 'read';
   };
+
+   // Handle saving updated patient data (including adherence rating)
+   const handleSavePatientInfo = (updatedPatient: Patient) => {
+        console.log("Saving patient info (simulated):", updatedPatient);
+        setPatients(prevPatients => prevPatients.map(p => p.id === updatedPatient.id ? updatedPatient : p));
+        // Simulate earning points for updating info/rating
+        if (kineData) {
+            const pointsEarned = 5;
+            setKineData(prev => prev ? ({ ...prev, progressPoints: (prev.progressPoints || 0) + pointsEarned }) : prev);
+            toast({ title: "Activité enregistrée !", description: `Vous avez gagné ${pointsEarned} points pour la mise à jour du dossier patient.` });
+        }
+        toast({ title: "Informations Patient Sauvegardées (Simulation)" });
+   };
+
 
   const handleAddPatient = (newPatientData: Omit<Patient, 'id' | 'kine_id' | 'pathologies' | 'remarques' | 'objectifs'>) => {
       const newPatient: Patient = {
@@ -195,12 +219,25 @@ export default function KineDashboard() {
     setShopPrograms(prev => prev.filter(p => p.id !== programId));
     toast({ title: "Programme supprimé (Simulation)", variant: "destructive" });
   };
-  // --- End Handlers ---
+
+   // --- Collaboration Handlers (Simulated) ---
+   const handleTransferPatient = (patientId: string, targetKineId: string) => {
+        console.log(`Simulating transfer of patient ${patientId} to kine ${targetKineId}`);
+        toast({ title: "Transfert Patient (Simulation)", description: `Demande de transfert de ${selectedPatientName} vers Kine ID ${targetKineId} envoyée.` });
+        // In real app: Update patient's kine_id in Firestore, handle notifications/acceptance
+   };
+
+   const handleSharePatient = (patientId: string, collaboratingKineId: string) => {
+        console.log(`Simulating sharing patient ${patientId} with kine ${collaboratingKineId}`);
+        toast({ title: "Partage Patient (Simulation)", description: `Accès au dossier de ${selectedPatientName} partagé avec Kine ID ${collaboratingKineId}.` });
+        // In real app: Update access control lists in Firestore
+   };
+  // --- End Collaboration Handlers ---
 
   // --- Share Kine Progress ---
   const handleShareKineProgress = () => {
     if (!kineData) return;
-    const text = `J'ai atteint ${kineData.progressPoints || 0} points et obtenu ${kineData.certifications?.length || 0} badges sur Mon Assistant Kiné !`;
+    const text = `J'ai atteint ${kineData.progressPoints || 0} points et obtenu ${kineData.certifications?.length || 0} badges sur Mon Assistant Kiné ! Découvrez mon profil.`; // Adjusted text
     const url = window.location.href; // Or a specific profile URL
     if (navigator.share) {
       navigator.share({ title: 'Ma Progression sur Mon Assistant Kiné', text, url })
@@ -222,6 +259,9 @@ export default function KineDashboard() {
   const selectedPatientName = selectedPatient ? `${selectedPatient.prénom} ${selectedPatient.nom}` : 'le patient sélectionné';
   const totalNotifications = notifications.feedbackAlerts.length + notifications.messages.length;
 
+  // Find SuperKine badge
+  const superKineBadge = certifications.find(c => c.isSuperKineBadge);
+
   return (
     <div className="space-y-8">
         {/* Date, Gamification, and Subscription Reminders Header */}
@@ -233,6 +273,12 @@ export default function KineDashboard() {
                     <CalendarDays className="w-5 h-5 text-primary"/>
                     <span className="capitalize">{currentDate}</span>
                 </div>
+                 {/* SuperKiné Badge */}
+                 {superKineBadge && (
+                    <div className="flex items-center gap-1.5 text-sm font-semibold text-yellow-600 bg-yellow-100 border border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700 px-2 py-1 rounded-md w-fit">
+                       <Crown className="w-4 h-4" /> {superKineBadge.name}
+                    </div>
+                 )}
                 {/* Kine Gamification */}
                 {kineData && (
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-sm text-muted-foreground">
@@ -260,8 +306,9 @@ export default function KineDashboard() {
                 )}
                  {/* Kine Certifications Display - Reusing patient component for brevity */}
                  {certifications.length > 0 && (
-                     <KineCertificationDisplay certifications={certifications} kineName={`${kineData?.prénom} ${kineData?.nom}`} />
+                     <KineCertificationDisplay certifications={certifications} kineName={`${kineData?.prénom} ${kineData?.nom}`} showSuperKine={false} /> // Hide SuperKine here as it's displayed above
                  )}
+
 
             </div>
 
@@ -329,13 +376,14 @@ export default function KineDashboard() {
 
       {/* Main Dashboard */}
       <Tabs defaultValue="patients" className="w-full">
-        {/* Updated grid columns and removed Protocoles tab */}
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6">
+        {/* Updated grid columns and added KinéHub tab */}
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 mb-6">
             <TabsTrigger value="patients"><UserCheck className="w-4 h-4 mr-2"/>Gestion Patients</TabsTrigger>
-            <TabsTrigger value="chatbot"><Bot className="w-4 h-4 mr-2"/>Chatbot Mak</TabsTrigger> {/* New Chatbot Tab */}
+            <TabsTrigger value="chatbot"><Bot className="w-4 h-4 mr-2"/>Chatbot Mak</TabsTrigger>
+            <TabsTrigger value="collaboration"><Users className="w-4 h-4 mr-2"/>KinéHub Collab</TabsTrigger> {/* New KinéHub Tab */}
+            <TabsTrigger value="reputation"><BarChart3 className="w-4 h-4 mr-2"/>KinéHub Réputation</TabsTrigger> {/* New Reputation Tab */}
             <TabsTrigger value="marketplace"><Store className="w-4 h-4 mr-2"/>Marketplace</TabsTrigger>
             <TabsTrigger value="blog"><BookOpen className="w-4 h-4 mr-2"/>Blog Pro</TabsTrigger>
-            {/* <TabsTrigger value="templates"><Layers className="w-4 h-4 mr-2"/>Protocoles</TabsTrigger> */} {/* Removed Protocoles */}
             <TabsTrigger value="certifications"><Award className="w-4 h-4 mr-2"/>Badges Pro</TabsTrigger>
         </TabsList>
 
@@ -354,7 +402,7 @@ export default function KineDashboard() {
                 <CardContent>
                    {kineData && (
                        <p className="mb-4 text-muted-foreground">
-                           Bienvenue, Dr. {kineData.nom}. Spécialité : {kineData.spécialité}
+                           Bienvenue, Dr. {kineData.nom}. Spécialité : {kineData.spécialité}. Ville: {kineData.ville || 'Non spécifiée'}
                        </p>
                    )}
                   <PatientSelector
@@ -369,7 +417,7 @@ export default function KineDashboard() {
               {selectedPatientId && selectedPatient ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Accordion for Patient Info and Assessment */}
-                    <Accordion type="single" collapsible className="w-full lg:col-span-2">
+                    <Accordion type="single" collapsible className="w-full lg:col-span-2" defaultValue="patient-info">
                       <AccordionItem value="patient-info">
                         <AccordionTrigger className="text-lg font-semibold px-6 py-4 bg-card rounded-t-lg border data-[state=closed]:rounded-b-lg data-[state=closed]:border-b data-[state=open]:border-b-0 hover:no-underline hover:bg-muted/50">
                             <div className="flex items-center gap-2">
@@ -378,7 +426,7 @@ export default function KineDashboard() {
                             </div>
                         </AccordionTrigger>
                         <AccordionContent className="border border-t-0 rounded-b-lg bg-card p-0">
-                          <PatientInfoForm patient={selectedPatient} />
+                          <PatientInfoForm patient={selectedPatient} onSave={handleSavePatientInfo} />
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>
@@ -412,6 +460,43 @@ export default function KineDashboard() {
              )}
          </TabsContent>
 
+        {/* KinéHub Collaboration Tab */}
+        <TabsContent value="collaboration">
+             {kineData && selectedPatient ? (
+                 <KineCollaborationHub
+                    currentKineId={kineData.id}
+                    selectedPatient={selectedPatient}
+                    otherKines={mockOtherKines} // Pass mock or fetched list of other kines
+                    onTransferPatient={handleTransferPatient}
+                    onSharePatient={handleSharePatient}
+                />
+             ) : (
+                 <Card>
+                     <CardContent className="p-6 text-center text-muted-foreground">
+                         Sélectionnez un patient pour voir les options de collaboration.
+                     </CardContent>
+                 </Card>
+             )}
+        </TabsContent>
+
+         {/* KinéHub Reputation Tab */}
+         <TabsContent value="reputation">
+             {kineData ? (
+                <KineReputationDisplay
+                    kine={kineData}
+                    rankings={mockKineRankings} // Pass mock rankings
+                 />
+             ) : (
+                  <Card>
+                    <CardContent className="p-6 text-center text-muted-foreground">
+                        Chargement des informations de réputation...
+                    </CardContent>
+                 </Card>
+             )}
+
+         </TabsContent>
+
+
         {/* Marketplace Tab */}
         <TabsContent value="marketplace">
             <MarketplaceManager
@@ -433,14 +518,9 @@ export default function KineDashboard() {
             />
         </TabsContent>
 
-        {/* Templates Tab - REMOVED */}
-        {/* <TabsContent value="templates">
-            <TemplateBrowser protocols={rehabProtocols} />
-        </TabsContent> */}
 
          {/* Certifications Tab */}
         <TabsContent value="certifications">
-             {/* Use the updated component to show points */}
             <KineCertificationManager
                 certifications={certifications}
                 title="Mes Badges Professionnels"
@@ -458,9 +538,6 @@ export default function KineDashboard() {
            onClose={() => setIsAddPatientModalOpen(false)}
            onPatientAdded={handleAddPatient}
        />
-
-       {/* Kine Chatbot Trigger - REMOVED (Now inside a tab) */}
-       {/* {kineData && <KineChatbot kine={kineData} />} */}
 
     </div>
   );

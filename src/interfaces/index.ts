@@ -32,9 +32,18 @@ export interface Feedback {
     programme_id: string;
     patient_id: string;
     date: string;
-    douleur_moyenne: number;
-    difficulté: number;
+    douleur_moyenne: number; // Patient rating of pain (ressenti programme)
+    difficulté: number; // Patient rating of difficulty (ressenti programme)
     commentaire_libre?: string;
+}
+
+// Interface for badges earned by patients
+export interface PatientBadge {
+    id: string;
+    name: string; // e.g., "Patient Champion", "Sérieux Confirmé"
+    description: string; // e.g., "Plus de 90% d'adhérence sur le dernier mois", "10 séances complétées d'affilée"
+    icon?: string; // Icon name
+    dateAwarded: string; // ISO date string
 }
 
 export interface Patient {
@@ -44,15 +53,17 @@ export interface Patient {
   email: string;
   date_naissance: string;
   pathologies: string[];
-  remarques: string;
+  remarques: string; // Kine's initial assessment notes
   kine_id: string;
   objectifs: string[];
   subscriptionEndDate?: string;
   subscriptionStatus?: 'active' | 'expiring' | 'expired';
   purchasedProgramIds?: string[]; // IDs of programs bought from the shop
   progressTestResults?: ProgressTestResult[]; // Track test results
-  progressPoints?: number; // For gamification
+  progressPoints?: number; // For patient gamification
   pseudo?: string; // Anonymous name for leaderboards
+  adherenceRatingByKine?: number; // 0-100%, rated by Kine (new)
+  badges?: PatientBadge[]; // Badges earned by the patient (new)
 }
 
 export interface MessageToKine {
@@ -65,15 +76,29 @@ export interface MessageToKine {
     status: 'unread' | 'read' | 'archived';
 }
 
+// For Kine certifications/badges
+export interface CertificationBadge {
+    id: string;
+    name: string;
+    description: string;
+    icon?: string; // Icon name (e.g., from lucide-react) or URL
+    dateAwarded: string; // ISO date string
+    pointsRequired?: number; // Points needed to achieve this badge (optional)
+    isSuperKineBadge?: boolean; // Flag for special status like Superhost (new)
+}
+
 export interface Kine {
     id: string;
     nom: string;
     prénom: string;
     email: string;
     spécialité: string;
+    ville?: string; // Added for local ranking example
     certifications?: CertificationBadge[]; // Kine certifications/badges
-    progressPoints?: number; // For gamification (e.g., based on activity)
+    progressPoints?: number; // For kine gamification (e.g., based on activity)
+    // isSuperKine?: boolean; // Could be derived from badges or a separate flag
 }
+
 
 export interface BlogPost {
     id: string;
@@ -133,15 +158,6 @@ export interface RehabProtocol {
     keywords?: string[]; // Keywords for searching
 }
 
-// For Kine certifications/badges
-export interface CertificationBadge {
-    id: string;
-    name: string;
-    description: string;
-    icon?: string; // Icon name (e.g., from lucide-react) or URL
-    dateAwarded: string; // ISO date string
-    pointsRequired?: number; // Points needed to achieve this badge (optional)
-}
 
 // For patient progress tests
 export interface ProgressTest {
