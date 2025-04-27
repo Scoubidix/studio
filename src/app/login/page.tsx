@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword, getAuth } from 'firebase/auth';
 import Link from 'next/link';
-
+import { redirect } from 'next/navigation'; // Import redirect
+import { Button } from '@/components/ui/button'; // Import Button
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -18,7 +19,8 @@ const LoginPage = () => {
       await signInWithEmailAndPassword(auth, email, password);
       console.log('User logged in successfully');
       // TODO: Redirect based on user role after successful login
-      // Example: redirect('/kine/dashboard') or redirect('/patient/dashboard')
+      // This part will be handled by the root page logic now
+      // redirect('/'); // Redirect to home which handles role-based redirection
     } catch (error: any) {
       // Provide more user-friendly error messages
       if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
@@ -31,6 +33,18 @@ const LoginPage = () => {
       }
     }
   };
+
+  // --- Direct Login Functions for Testing ---
+  const handleDirectKineLogin = () => {
+    console.log("Simulating Kine login...");
+    redirect('/kine/dashboard');
+  };
+
+  const handleDirectPatientLogin = () => {
+    console.log("Simulating Patient login...");
+    redirect('/patient/dashboard');
+  };
+  // --- End Direct Login Functions ---
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]"> {/* Center content vertically */}
@@ -91,6 +105,21 @@ const LoginPage = () => {
              </Link>
           </p> */}
         </div>
+
+        {/* --- Direct Login Buttons for Testing --- */}
+         <div className="mt-6 pt-6 border-t space-y-3">
+            <p className="text-center text-xs text-muted-foreground">Accès direct (pour test) :</p>
+            <div className="flex justify-center gap-4">
+                <Button variant="secondary" size="sm" onClick={handleDirectKineLogin}>
+                   Dashboard Kiné
+                </Button>
+                <Button variant="secondary" size="sm" onClick={handleDirectPatientLogin}>
+                   Dashboard Patient
+                </Button>
+            </div>
+         </div>
+        {/* --- End Direct Login Buttons --- */}
+
       </div>
     </div>
   );
