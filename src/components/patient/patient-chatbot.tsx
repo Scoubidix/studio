@@ -235,7 +235,7 @@ export default function PatientChatbot({ patient }: PatientChatbotProps) { // De
              </div>
              {/* Enhanced Description */}
               <CardDescription className="text-sm text-muted-foreground leading-relaxed">
-                   Cet assistant est là pour vous guider ! Il connaît <span className='font-semibold text-foreground'>votre programme spécifique</span>, vos <span className='font-semibold text-foreground'>objectifs personnels</span> et les <span className='font-semibold text-foreground'>conseils de votre kiné</span>. N'hésitez pas à lui poser des questions sur un exercice, une douleur ressentie (sans demander de diagnostic médical), ou si vous avez un doute. S'il ne peut pas répondre, il vous proposera de <span className='font-semibold text-foreground'>contacter directement votre kiné</span>.
+                   Cet assistant est là pour vous guider ! Il connaît <span className='font-semibold text-foreground'>votre programme spécifique</span>, vos <span className='font-semibold text-foreground'>objectifs personnels</span> et est <span className='font-semibold text-foreground'>personnalisé grâce aux conseils spécifiques de votre kiné</span>. Il agit comme l'assistant de votre thérapeute, connaissant ses recommandations pour vous. N'hésitez pas à lui poser des questions sur un exercice, une douleur ressentie (sans demander de diagnostic médical), ou si vous avez un doute. S'il ne peut pas répondre, il vous proposera de <span className='font-semibold text-foreground'>contacter directement votre kiné</span>.
               </CardDescription>
         </CardHeader>
 
