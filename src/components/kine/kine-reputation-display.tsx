@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { BarChart3, Medal, Crown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import KineCertificationDisplay from '@/components/patient/kine-certification-display'; // Re-use for badge display logic
+import KineCertificationManager from '@/components/kine/kine-certification-manager'; // Import the missing component
 
 interface KineReputationDisplayProps {
   kine: Kine;
