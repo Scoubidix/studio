@@ -22,9 +22,13 @@ export interface ProgramExercise {
   exercice_id: string;
   séries: number;
   répétitions: number;
-  fréquence?: string; // Optional frequency per exercise in program
+  // Add details specific to this program instance of the exercise
+  objectif?: string; // Example: "Renforcer quadriceps"
+  materielRequis?: string; // Example: "Bande élastique, poids, rien"
+  notesSpecifiques?: string; // Specific notes for this exercise within this program
   exerciseDetails?: Exercise; // Optional: populated when fetching full program details
 }
+
 
 export interface Program {
   id: string;
@@ -126,19 +130,26 @@ export interface BlogPost {
 export interface ShopProgram {
     id: string;
     kine_id: string; // Creator Kine ID
-    kine_name?: string; // Added: Creator Kine Name (optional, could be populated server-side)
-    kine_badges?: CertificationBadge[]; // Added: Creator badges (optional, could be populated server-side)
-    title: string;
-    description: string;
-    durationWeeks?: number;
-    targetAudience: string; // e.g., "Skiers", "Runners", "Office workers"
-    price: number; // Consider using a dedicated money library in a real app
-    currency: string; // e.g., "EUR"
-    exerciseList: ProgramExercise[]; // The actual exercises
+    kine_name?: string; // Creator Kine Name (optional, could be populated server-side)
+    kine_badges?: CertificationBadge[]; // Creator badges (optional, could be populated server-side)
+    title: string; // Required
+    summary: string; // Required, short description
+    targetAudience: string[]; // Required, multi-select (e.g., ['débutants', 'sportifs'])
+    specificPathologies?: string; // Optional, text or keywords (e.g., "LCA, coiffe des rotateurs")
+    therapeuticGoals: string[]; // Required, max 3 choices (e.g., ['Renforcement musculaire', 'Gain d’amplitude'])
+    programDuration: number; // Required (4, 8, 12)
+    recommendedFrequency: number; // Required (sessions per week)
+    averageSessionDuration: number; // Required (15, 30, 45 min)
+    exerciseList: ProgramExercise[]; // Required, capture objectif, matériel per exercise
+    majorContraindications: string; // Required textarea
+    qualityCertification: boolean; // Required checkbox
+    price: number; // Required
+    currency: string; // Default 'EUR'
     imageUrl?: string;
     tags?: string[];
-    rating?: number; // Added: Average rating (0-5)
-    reviews?: ShopProgramReview[]; // Added: User reviews
+    rating?: number; // Average rating (0-5)
+    reviews?: ShopProgramReview[]; // User reviews
+    status?: 'draft' | 'pending_validation' | 'validated' | 'rejected'; // Added status
 }
 
 // Added interface for Shop Program Reviews
@@ -217,4 +228,3 @@ export interface AddExerciseFormData {
 }
 
 
-    
