@@ -90,6 +90,8 @@ export interface BlogPost {
 export interface ShopProgram {
     id: string;
     kine_id: string; // Creator Kine ID
+    kine_name?: string; // Added: Creator Kine Name (optional, could be populated server-side)
+    kine_badges?: CertificationBadge[]; // Added: Creator badges (optional, could be populated server-side)
     title: string;
     description: string;
     durationWeeks?: number;
@@ -99,7 +101,19 @@ export interface ShopProgram {
     exerciseList: ProgramExercise[]; // The actual exercises
     imageUrl?: string;
     tags?: string[];
+    rating?: number; // Added: Average rating (0-5)
+    reviews?: ShopProgramReview[]; // Added: User reviews
 }
+
+// Added interface for Shop Program Reviews
+export interface ShopProgramReview {
+    id: string;
+    reviewerName: string; // Or reviewerId if linked to user accounts
+    rating: number; // 0-5 stars
+    comment: string;
+    date: string; // ISO date string
+}
+
 
 // For rehabilitation protocol templates
 export interface RehabProtocol {

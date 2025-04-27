@@ -49,23 +49,56 @@ const mockPatientData: Patient = {
   pseudo: 'JeanD85', // Mock pseudo
 };
 
-const mockKineData: Kine = { // Mock data for the assigned Kine
-    id: 'kineTest1', nom: 'Leroy', prénom: 'Sophie', email: 'sophie.leroy@kine.fr',
-    spécialité: 'Sport',
-    certifications: [ // Add mock certifications
-        { id: 'cert1', name: 'Expert Rééducation Épaule', description: 'Formation avancée sur la rééducation de l\'épaule.', dateAwarded: '2023-05-15T00:00:00.000Z', icon: 'Award' },
-        { id: 'cert2', name: 'Spécialiste Course à Pied', description: 'Certification en biomécanique et prévention des blessures du coureur.', dateAwarded: '2024-01-20T00:00:00.000Z', icon: 'Award' },
-    ]
-};
+// Mock data for Kines, including the one assigned to the patient and potential shop creators
+const mockKines: Kine[] = [
+    {
+        id: 'kineTest1', nom: 'Leroy', prénom: 'Sophie', email: 'sophie.leroy@kine.fr',
+        spécialité: 'Sport',
+        certifications: [
+            { id: 'cert1', name: 'Expert Rééducation Épaule', description: 'Formation avancée sur la rééducation de l\'épaule.', dateAwarded: '2023-05-15T00:00:00.000Z', icon: 'Award' },
+            { id: 'cert2', name: 'Spécialiste Course à Pied', description: 'Certification en biomécanique et prévention des blessures du coureur.', dateAwarded: '2024-01-20T00:00:00.000Z', icon: 'Award' },
+             { id: 'cert_shop', name: 'Créateur Marketplace', description: 'A publié des programmes sur la marketplace.', dateAwarded: '2024-07-25T00:00:00.000Z', icon: 'Award' }, // Added badge for shop
+        ],
+        progressPoints: 1500,
+    },
+    {
+        id: 'kineTest2', nom: 'Dubois', prénom: 'Alain', email: 'alain.dubois@kine.fr',
+        spécialité: 'Pédiatrie',
+        certifications: [
+            { id: 'cert3', name: 'Kiné Pédiatrique Certifié', description: 'Certification en kinésithérapie pédiatrique.', dateAwarded: '2022-11-01T00:00:00.000Z', icon: 'Award' },
+        ],
+        progressPoints: 700,
+    }
+];
+
+const mockKineData = mockKines.find(k => k.id === mockPatientData.kine_id)!; // Get the specific kine for the patient
 
 const mockBlogPosts: BlogPost[] = [
     { id: 'blog1', title: 'Comprendre la Lombalgie Chronique', summary: 'Un aperçu des causes et des approches de traitement pour les douleurs lombaires persistantes...', publishDate: '2024-07-15T00:00:00.000Z', tags: ['lombalgie', 'dos'], imageUrl: 'https://picsum.photos/seed/backpain/300/150' },
     { id: 'blog2', title: 'L\'importance de la Mobilité Articulaire', summary: 'Pourquoi maintenir une bonne mobilité est crucial pour prévenir les blessures et améliorer les performances...', publishDate: '2024-07-10T00:00:00.000Z', tags: ['mobilité', 'prévention'], imageUrl: 'https://picsum.photos/seed/mobility/300/150' },
 ];
 
+// Updated Shop Programs with rating and reviews
 const mockShopPrograms: ShopProgram[] = [
-    { id: 'shopProg1', kine_id: 'kineTest2', title: 'Préparation Ski en 4 Semaines', description: 'Renforcez vos jambes et votre tronc pour dévaler les pentes en toute sécurité.', durationWeeks: 4, targetAudience: 'Skieurs', price: 29.99, currency: 'EUR', exerciseList: [], tags: ['ski', 'préparation', 'hiver'], imageUrl: 'https://picsum.photos/seed/ski/300/150' },
-    { id: 'shopProg2', kine_id: 'kineTest1', title: 'Programme Anti-Mal de Dos (Bureau)', description: 'Exercices simples pour soulager les tensions liées à la position assise prolongée.', targetAudience: 'Travailleurs de bureau', price: 19.99, currency: 'EUR', exerciseList: [], tags: ['dos', 'bureau', 'sédentaire'], imageUrl: 'https://picsum.photos/seed/desk/300/150' },
+    {
+        id: 'shopProg1', kine_id: 'kineTest2', title: 'Préparation Ski en 4 Semaines', description: 'Renforcez vos jambes et votre tronc pour dévaler les pentes en toute sécurité.',
+        durationWeeks: 4, targetAudience: 'Skieurs', price: 29.99, currency: 'EUR', exerciseList: [], tags: ['ski', 'préparation', 'hiver'],
+        imageUrl: 'https://picsum.photos/seed/ski/300/150',
+        rating: 4.5, // Added rating
+        reviews: [ // Added reviews
+            { id: 'rev1', reviewerName: 'JeanD85', rating: 5, comment: 'Super programme, très complet !', date: '2024-07-20T00:00:00.000Z'},
+            { id: 'rev2', reviewerName: 'ClaireM', rating: 4, comment: 'Bonne préparation, peut-être un peu intense au début.', date: '2024-07-18T00:00:00.000Z'},
+        ]
+    },
+    {
+        id: 'shopProg2', kine_id: 'kineTest1', title: 'Programme Anti-Mal de Dos (Bureau)', description: 'Exercices simples pour soulager les tensions liées à la position assise prolongée.',
+        targetAudience: 'Travailleurs de bureau', price: 19.99, currency: 'EUR', exerciseList: [], tags: ['dos', 'bureau', 'sédentaire'],
+        imageUrl: 'https://picsum.photos/seed/desk/300/150',
+        rating: 4.8, // Added rating
+        reviews: [ // Added reviews
+            { id: 'rev3', reviewerName: 'LucP', rating: 5, comment: 'Très efficace pour mes douleurs de dos.', date: '2024-07-22T00:00:00.000Z'},
+        ]
+    },
 ];
 
 const mockProgressTests: ProgressTest[] = [
@@ -396,6 +429,7 @@ export default function PatientDashboard() {
         <TabsContent value="boutique">
             <ShopDisplay
                 programs={mockShopPrograms}
+                allKines={mockKines} // Pass the list of all kines
                 onPurchase={handlePurchase}
                 purchasedProgramIds={mockPatientData.purchasedProgramIds || []}
             />
@@ -417,3 +451,5 @@ export default function PatientDashboard() {
     </div>
   );
 }
+
+    
