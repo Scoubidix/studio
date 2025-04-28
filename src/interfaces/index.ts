@@ -124,7 +124,20 @@ export interface BlogPost {
     tags?: string[]; // e.g., 'lombalgie', 'genou', 'sport'
     author?: string; // Optional author name
     imageUrl?: string;
+    rating?: number; // Average rating from Kines (0-5)
+    ratingCount?: number; // Number of ratings received
+    status?: 'draft' | 'pending_validation' | 'validated' | 'rejected'; // Status of the post
 }
+
+// Interface for the Add/Edit Blog Post Form
+export interface BlogPostFormData {
+    title: string;
+    summary: string;
+    contentUrl?: string;
+    tags?: string; // Use comma-separated string for form input
+    imageUrl?: string;
+}
+
 
 // For pre-made programs sold in the shop/marketplace
 export interface ShopProgram {
@@ -226,5 +239,3 @@ export interface AddExerciseFormData {
   defaultSéries?: number;
   defaultRépétitions?: number;
 }
-
-

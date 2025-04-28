@@ -18,10 +18,11 @@ import ProgressTestDisplay from '@/components/patient/progress-test-display'; //
 import KineCertificationDisplay from '@/components/patient/kine-certification-display'; // Import new component
 import PatientBadgesDisplay from '@/components/patient/patient-badges-display'; // Import new component
 import Image from 'next/image';
-import { Dumbbell, Activity, StretchVertical, Trophy, CalendarDays, ArrowRight, Target, Share2, BookOpen, Microscope, ShoppingBag, ClipboardCheck, Award, BarChart, Bot, Medal } from 'lucide-react'; // Added Bot, Medal
+import { Dumbbell, Activity, StretchVertical, Trophy, CalendarDays, ArrowRight, Target, Share2, BookOpen, Microscope, ShoppingBag, ClipboardCheck, Award, BarChart, Bot, Medal, Edit } from 'lucide-react'; // Added Bot, Medal, Edit
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
+import AddBlogPostForm from '@/components/kine/add-blog-post-form'; // Import placeholder
 
 // --- Mock Data (Replace with actual data fetching later) ---
 const mockExercises: Exercise[] = [
@@ -93,7 +94,7 @@ const mockBlogPosts: BlogPost[] = [
 const mockShopPrograms: ShopProgram[] = [
     {
         id: 'shopProg1', kine_id: 'kineTest2', title: 'Préparation Ski en 4 Semaines', description: 'Renforcez vos jambes et votre tronc pour dévaler les pentes en toute sécurité.',
-        durationWeeks: 4, targetAudience: 'Skieurs', price: 29.99, currency: 'EUR', exerciseList: [], tags: ['ski', 'préparation', 'hiver'],
+        durationWeeks: 4, targetAudience: ['Skieurs'], price: 29.99, currency: 'EUR', exerciseList: [], tags: ['ski', 'préparation', 'hiver'],
         imageUrl: 'https://picsum.photos/seed/ski/300/150',
         rating: 4.5, // Added rating
         reviews: [ // Added reviews
@@ -103,7 +104,7 @@ const mockShopPrograms: ShopProgram[] = [
     },
     {
         id: 'shopProg2', kine_id: 'kineTest1', title: 'Programme Anti-Mal de Dos (Bureau)', description: 'Exercices simples pour soulager les tensions liées à la position assise prolongée.',
-        targetAudience: 'Travailleurs de bureau', price: 19.99, currency: 'EUR', exerciseList: [], tags: ['dos', 'bureau', 'sédentaire'],
+        targetAudience: ['Travailleurs de bureau'], price: 19.99, currency: 'EUR', exerciseList: [], tags: ['dos', 'bureau', 'sédentaire'],
         imageUrl: 'https://picsum.photos/seed/desk/300/150',
         rating: 4.8, // Added rating
         reviews: [ // Added reviews
@@ -235,12 +236,13 @@ export default function PatientDashboard() {
     <div className="space-y-8">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between md:items-start gap-4 mb-6 p-4 bg-card rounded-lg shadow-sm border">
-           <div className="space-y-2">
+           <div className="space-y-2 flex-grow"> {/* Added flex-grow */}
                <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
                    <CalendarDays className="w-5 h-5 text-primary"/>
                    <span className="capitalize">{currentDate}</span>
                </div>
-               <p className="text-sm text-muted-foreground italic">"{motivationalQuote}"</p>
+               {/* Increased font size and italics for motivational quote */}
+               <p className="text-lg text-muted-foreground italic">"{motivationalQuote}"</p>
                {patientGoals.length > 0 && (
                   <div className="flex items-start gap-2 text-sm text-muted-foreground pt-1">
                        <Target className="w-4 h-4 mt-0.5 text-accent flex-shrink-0"/>
@@ -250,6 +252,16 @@ export default function PatientDashboard() {
                        </div>
                   </div>
                )}
+                {/* Adherence Rating Display */}
+                {mockPatientData.adherenceRatingByKine !== undefined && (
+                    <div className="flex items-start gap-2 text-sm text-muted-foreground pt-1">
+                        <Activity className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
+                        <div>
+                           <span className="font-medium text-foreground/90">Adhérence (selon kiné) :</span>{' '}
+                           {mockPatientData.adherenceRatingByKine}%
+                        </div>
+                    </div>
+                 )}
            </div>
             <div className="flex flex-col items-end gap-4 flex-shrink-0"> {/* Increased gap */}
                  <div className="flex items-center gap-4"> {/* Container for trophy and share */}
@@ -282,16 +294,32 @@ export default function PatientDashboard() {
       </div>
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="programme" className="w-full">
-        {/* Updated TabsList to include Chatbot */}
+      <Tabs defaultValue="chatbot" className="w-full">
+        {/* Updated TabsList to include Chatbot first and highlighted */}
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 mb-6">
+           {/* Highlighted Chatbot Tab */}
+           <TabsTrigger value="chatbot" className="bg-primary/10 text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Bot className="w-4 h-4 mr-1 md:mr-2"/>Assistant
+           </TabsTrigger>
           <TabsTrigger value="programme"><Dumbbell className="w-4 h-4 mr-1 md:mr-2"/>Programme</TabsTrigger>
-          <TabsTrigger value="chatbot"><Bot className="w-4 h-4 mr-1 md:mr-2"/>Assistant</TabsTrigger> {/* New Chatbot Tab */}
           <TabsTrigger value="tests"><Activity className="w-4 h-4 mr-1 md:mr-2"/>Tests Prog.</TabsTrigger>
           <TabsTrigger value="blog"><BookOpen className="w-4 h-4 mr-1 md:mr-2"/>Infos</TabsTrigger>
           <TabsTrigger value="rapports"><Microscope className="w-4 h-4 mr-1 md:mr-2"/>Rapports</TabsTrigger>
           <TabsTrigger value="boutique"><ShoppingBag className="w-4 h-4 mr-1 md:mr-2"/>Boutique</TabsTrigger>
         </TabsList>
+
+         {/* Patient Chatbot Tab */}
+        <TabsContent value="chatbot">
+           {mockPatientData ? (
+                <PatientChatbot patient={mockPatientData} />
+           ) : (
+                <Card>
+                  <CardContent className="p-6 text-center text-muted-foreground">
+                    Chargement des informations patient...
+                  </CardContent>
+                </Card>
+           )}
+        </TabsContent>
 
         {/* Programme Tab with Feedback Form */}
         <TabsContent value="programme" className="space-y-8">
@@ -355,18 +383,7 @@ export default function PatientDashboard() {
             />
         </TabsContent>
 
-        {/* Patient Chatbot Tab */}
-        <TabsContent value="chatbot">
-           {mockPatientData ? (
-                <PatientChatbot patient={mockPatientData} />
-           ) : (
-                <Card>
-                  <CardContent className="p-6 text-center text-muted-foreground">
-                    Chargement des informations patient...
-                  </CardContent>
-                </Card>
-           )}
-        </TabsContent>
+
 
 
          {/* Progress Tests Tab with Leaderboard/Rewards */}
@@ -437,7 +454,11 @@ export default function PatientDashboard() {
 
         {/* Blog/Info Tab */}
         <TabsContent value="blog">
-             <BlogDisplay posts={mockBlogPosts} />
+             <BlogDisplay
+                 posts={mockBlogPosts}
+                 title="Infos & Conseils Santé"
+                 description="Articles vulgarisés pour mieux comprendre votre corps et votre rééducation."
+             />
         </TabsContent>
 
         {/* Medical Reports Tab */}
@@ -468,5 +489,3 @@ export default function PatientDashboard() {
     </div>
   );
 }
-
-    

@@ -6,7 +6,7 @@ import type { BlogPost } from '@/interfaces';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { Calendar, Tags, BookOpen, Search } from 'lucide-react'; // Added Search icon
+import { Calendar, Tags, BookOpen, Search, Star } from 'lucide-react'; // Added Star
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
@@ -18,14 +18,77 @@ interface BlogDisplayProps {
   description?: string; // Optional description
   showAuthor?: boolean; // Option to show author (for Kine blog)
   showSearch?: boolean; // Option to show search bar (for Kine blog)
+  allowRating?: boolean; // Allow rating posts (for Kine blog)
+  onRatePost?: (postId: string, rating: number) => void; // Callback for rating
 }
+
+// Helper function to render stars for display
+const StarRatingDisplay = ({ rating, count }: { rating?: number, count?: number }) => {
+  if (rating === undefined || rating === null || count === undefined || count === null || count === 0) {
+    return <span className="text-xs text-muted-foreground italic">Pas encore noté</span>;
+  }
+  const fullStars = Math.floor(rating);
+  const halfStar = rating % 1 >= 0.5;
+  const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+  return (
+    <div className="flex items-center gap-0.5">
+      {[...Array(fullStars)].map((_, i) => (
+        <Star key={`full-${i}`} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+      ))}
+      {halfStar && <Star key="half" className="w-3 h-3 fill-yellow-400 text-yellow-400" style={{ clipPath: 'inset(0 50% 0 0)' }} />}
+      {[...Array(emptyStars)].map((_, i) => (
+        <Star key={`empty-${i}`} className="w-3 h-3 text-muted-foreground" />
+      ))}
+       <span className="ml-1 text-xs text-muted-foreground">({rating.toFixed(1)} / {count} votes)</span>
+    </div>
+  );
+};
+
+// Component for rating stars (interactive)
+const RatingInput = ({ onRate }: { onRate: (rating: number) => void }) => {
+  const [hoverRating, setHoverRating] = useState(0);
+  const [currentRating, setCurrentRating] = useState(0); // Track clicked rating
+
+  const handleClick = (rate: number) => {
+    setCurrentRating(rate);
+    onRate(rate);
+     // Reset hover after click? Optional.
+    // setHoverRating(0);
+  };
+
+  return (
+    <div className="flex items-center" onMouseLeave={() => setHoverRating(0)}>
+      {[1, 2, 3, 4, 5].map((rate) => (
+        <button
+          key={rate}
+          type="button"
+          onClick={() => handleClick(rate)}
+          onMouseEnter={() => setHoverRating(rate)}
+          className="p-0 bg-transparent border-none"
+          aria-label={`Noter ${rate} étoile${rate > 1 ? 's' : ''}`}
+        >
+          <Star
+            className={`w-4 h-4 cursor-pointer transition-colors ${
+              (hoverRating >= rate || currentRating >= rate)
+                ? 'fill-yellow-400 text-yellow-400'
+                : 'text-muted-foreground'
+            }`}
+          />
+        </button>
+      ))}
+    </div>
+  );
+};
+
 
 export default function BlogDisplay({
     posts,
     title = "Infos & Conseils",
     description = "Découvrez des articles pour mieux comprendre votre corps et votre rééducation.",
     showAuthor = false,
-    showSearch = false // Default to false
+    showSearch = false, // Default to false
+    allowRating = false, // Default to false
+    onRatePost,
 }: BlogDisplayProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -37,7 +100,7 @@ export default function BlogDisplay({
       (post.tags && post.tags.some(tag => tag.toLowerCase().includes(lowerSearchTerm))) ||
       (showAuthor && post.author && post.author.toLowerCase().includes(lowerSearchTerm))
     );
-  });
+  }).sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime()); // Sort by newest first
 
 
   return (
@@ -79,6 +142,12 @@ export default function BlogDisplay({
                         <span>{format(new Date(post.publishDate), "d MMM yyyy", { locale: fr })}</span>
                         {showAuthor && post.author && <span>| Par {post.author}</span>}
                    </div>
+                   {/* Display Rating for Kine view */}
+                    {showAuthor && (
+                        <div className="pt-1">
+                             <StarRatingDisplay rating={post.rating} count={post.ratingCount} />
+                        </div>
+                    )}
                 </CardHeader>
                 <CardContent className="flex-grow">
                   <p className="text-sm text-muted-foreground mb-3">{post.summary}</p>
@@ -91,11 +160,25 @@ export default function BlogDisplay({
                      </div>
                   )}
                 </CardContent>
-                <CardFooter className="border-t pt-4">
-                  {/* In a real app, this button would link to the full article */}
-                  <Button size="sm" variant="outline" disabled={!post.contentUrl} className="text-xs">
-                    Lire la suite (Bientôt)
-                  </Button>
+                <CardFooter className="border-t pt-4 flex justify-between items-center">
+                   {/* Allow Rating Input */}
+                   {allowRating && onRatePost ? (
+                       <div className="flex flex-col items-start gap-1">
+                           <span className="text-xs font-medium text-muted-foreground">Noter cet article :</span>
+                           <RatingInput onRate={(rating) => onRatePost(post.id, rating)} />
+                       </div>
+                   ) : (
+                        // Placeholder or Read More button for patient view
+                        <Button size="sm" variant="outline" disabled={!post.contentUrl} className="text-xs">
+                            Lire la suite (Bientôt)
+                        </Button>
+                   )}
+                   {/* Keep Read More button if not rating */}
+                    {!allowRating && (
+                         <Button size="sm" variant="outline" disabled={!post.contentUrl} className="text-xs">
+                           Lire la suite (Bientôt)
+                         </Button>
+                    )}
                 </CardFooter>
               </Card>
             ))}
@@ -109,5 +192,3 @@ export default function BlogDisplay({
     </Card>
   );
 }
-
-    

@@ -15,17 +15,18 @@ import NotificationArea from '@/components/kine/notification-area';
 import AddPatientModal from '@/components/kine/add-patient-modal';
 import MarketplaceManager from '@/components/kine/marketplace-manager'; // Import new component
 import BlogDisplay from '@/components/shared/blog-display'; // Import shared BlogDisplay
-import KineCertificationManager from '@/components/kine/kine-certification-manager'; // Import new component
+import AddBlogPostForm from '@/components/kine/add-blog-post-form'; // Import AddBlogPostForm (placeholder)
+// import KineCertificationManager from '@/components/kine/kine-certification-manager'; // Removed import
 import KineChatbot from '@/components/kine/kine-chatbot'; // Import KineChatbot
 import KineCollaborationHub from '@/components/kine/kine-collaboration-hub'; // Import new component
-import KineReputationDisplay from '@/components/kine/kine-reputation-display'; // Import new component
+// import KineReputationDisplay from '@/components/kine/kine-reputation-display'; // Removed import
 import AddExerciseForm from '@/components/kine/add-exercise-form'; // Import AddExerciseForm
 import ProgramGenerator from '@/components/kine/program-generator'; // Import ProgramGenerator
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import type { Patient, Kine, Feedback, MessageToKine, ShopProgram, BlogPost, RehabProtocol, CertificationBadge, Exercise } from '@/interfaces';
+import type { Patient, Kine, Feedback, MessageToKine, ShopProgram, BlogPost, RehabProtocol, CertificationBadge, Exercise, BlogPostFormData } from '@/interfaces';
 import { mockFeedbacks } from '@/components/kine/mock-data';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Award, ChevronDown, ChevronUp, Bot, Share2, Star, Trophy, Users, BarChart3, Crown, Dumbbell, Cog } from 'lucide-react'; // Added Dumbbell, Cog
+import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Award, ChevronDown, ChevronUp, Bot, Share2, Star, Trophy, Users, BarChart3, Crown, Dumbbell, Cog, Edit } from 'lucide-react'; // Added Dumbbell, Cog, Edit
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import KineCertificationDisplay from '@/components/patient/kine-certification-display'; // Import display component (can reuse)
@@ -58,6 +59,7 @@ const mockAvailableBadges: CertificationBadge[] = [
     { id: 'cert4', name: 'Créateur Marketplace', description: 'A publié son premier programme sur la marketplace.', dateAwarded: '', pointsRequired: 1500 },
     { id: 'cert5', name: 'Mentor Patient', description: 'A suivi plus de 10 patients actifs simultanément.', dateAwarded: '', pointsRequired: 3000 },
     { id: 'cert_exo_add', name: 'Architecte d\'Exercices', description: 'A ajouté son premier exercice personnalisé à la base de données.', dateAwarded: '', pointsRequired: 200 }, // New badge for adding exercises
+    { id: 'cert_blog_contrib', name: 'Plume Scientifique', description: 'A contribué au blog professionnel avec un article validé.', dateAwarded: '', pointsRequired: 400 }, // Badge for blog contribution
 ];
 
 
@@ -81,9 +83,9 @@ const mockKineShopPrograms: ShopProgram[] = [
 
 // Mock Blog posts for Kine (Scientific summaries)
 const mockKineBlogPosts: BlogPost[] = [
-     { id: 'kblog1', title: 'Optimiser la Récupération Post-Op LCA', summary: 'Points clés et dernières recommandations pour la rééducation après une ligamentoplastie du LCA. Inclut revue de littérature sur protocoles accélérés vs conservateurs.', publishDate: '2024-07-20T00:00:00.000Z', tags: ['LCA', 'genou', 'post-op', 'evidence-based'], author: 'Dr. Sophie Leroy', contentUrl: '#', imageUrl: 'https://picsum.photos/seed/lca-science/300/150' },
-     { id: 'kblog2', title: 'Tendinopathies d\'Achille : Approches Thérapeutiques Actuelles', summary: 'Synthèse des données sur la prise en charge des tendinopathies achilléennes, focus sur les exercices excentriques, ondes de choc et thérapie manuelle.', publishDate: '2024-07-18T00:00:00.000Z', tags: ['tendinopathie', 'achille', 'rééducation', 'evidence-based'], author: 'Dr. Alain Dubois', contentUrl: '#', imageUrl: 'https://picsum.photos/seed/achilles/300/150' },
-     { id: 'kblog3', title: 'Syndrome Douloureux Fémoro-Patellaire : Diagnostic et Traitement', summary: 'Critères diagnostiques et revue des interventions efficaces (renforcement quadricipital et fessier, taping, orthèses plantaires).', publishDate: '2024-06-10T00:00:00.000Z', tags: ['genou', 'SDFP', 'syndrome rotulien', 'diagnostic', 'traitement'], author: 'Dr. Sophie Leroy', contentUrl: '#', imageUrl: 'https://picsum.photos/seed/pfps/300/150' },
+     { id: 'kblog1', title: 'Optimiser la Récupération Post-Op LCA', summary: 'Points clés et dernières recommandations pour la rééducation après une ligamentoplastie du LCA. Inclut revue de littérature sur protocoles accélérés vs conservateurs.', publishDate: '2024-07-20T00:00:00.000Z', tags: ['LCA', 'genou', 'post-op', 'evidence-based'], author: 'Dr. Sophie Leroy', contentUrl: '#', imageUrl: 'https://picsum.photos/seed/lca-science/300/150', rating: 4.7, ratingCount: 15 }, // Added rating
+     { id: 'kblog2', title: 'Tendinopathies d\'Achille : Approches Thérapeutiques Actuelles', summary: 'Synthèse des données sur la prise en charge des tendinopathies achilléennes, focus sur les exercices excentriques, ondes de choc et thérapie manuelle.', publishDate: '2024-07-18T00:00:00.000Z', tags: ['tendinopathie', 'achille', 'rééducation', 'evidence-based'], author: 'Dr. Alain Dubois', contentUrl: '#', imageUrl: 'https://picsum.photos/seed/achilles/300/150', rating: 4.9, ratingCount: 22 }, // Added rating
+     { id: 'kblog3', title: 'Syndrome Douloureux Fémoro-Patellaire : Diagnostic et Traitement', summary: 'Critères diagnostiques et revue des interventions efficaces (renforcement quadricipital et fessier, taping, orthèses plantaires).', publishDate: '2024-06-10T00:00:00.000Z', tags: ['genou', 'SDFP', 'syndrome rotulien', 'diagnostic', 'traitement'], author: 'Dr. Sophie Leroy', contentUrl: '#', imageUrl: 'https://picsum.photos/seed/pfps/300/150', rating: 4.5, ratingCount: 10 }, // Added rating
 ];
 
 // Mock other Kines for collaboration examples
@@ -113,14 +115,16 @@ export default function KineDashboard() {
   const [patients, setPatients] = useState<Patient[]>(initialMockPatients);
   const [notifications, setNotifications] = useState<{ feedbackAlerts: Feedback[], messages: MessageToKine[] }>({ feedbackAlerts: [], messages: [] });
   const [isAddPatientModalOpen, setIsAddPatientModalOpen] = useState(false);
+  const [isAddBlogPostModalOpen, setIsAddBlogPostModalOpen] = useState(false); // State for blog post modal
   const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState('');
   const [expiringSubscriptions, setExpiringSubscriptions] = useState<Patient[]>([]);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(true); // State for notification accordion
+  const [isPatientInfoOpen, setIsPatientInfoOpen] = useState(false); // State for patient info accordion
 
   // Data states for new Kine features
   const [shopPrograms, setShopPrograms] = useState<ShopProgram[]>(mockKineShopPrograms);
-  const [kineBlogPosts] = useState<BlogPost[]>(mockKineBlogPosts); // Assuming read-only for now
+  const [kineBlogPosts, setKineBlogPosts] = useState<BlogPost[]>(mockKineBlogPosts); // Now mutable
   const [certifications, setCertifications] = useState<CertificationBadge[]>(initialMockKine.certifications || []);
   const [exerciseDatabase, setExerciseDatabase] = useState<Exercise[]>(mockExerciseDatabase); // State for exercise DB
 
@@ -158,7 +162,10 @@ export default function KineDashboard() {
       setCertifications(kineData?.certifications || []);
   }, [kineData]);
 
-  const handlePatientSelect = (patientId: string) => setSelectedPatientId(patientId);
+  const handlePatientSelect = (patientId: string) => {
+      setSelectedPatientId(patientId);
+      setIsPatientInfoOpen(false); // Close info accordion when selecting a new patient
+  }
 
   const handleMarkMessageAsRead = (messageId: string) => {
         console.log(`Marking message ${messageId} as read (simulated)`);
@@ -292,6 +299,52 @@ export default function KineDashboard() {
   };
   // --- End Handle Add Exercise ---
 
+   // --- Handle Add Blog Post ---
+  const handleAddBlogPost = (blogPostData: BlogPostFormData) => {
+       const newPost: BlogPost = {
+           ...blogPostData,
+           id: `kblog${kineBlogPosts.length + 1}`,
+           author: kineData ? `${kineData.prénom} ${kineData.nom}` : 'Auteur Inconnu',
+           publishDate: new Date().toISOString(),
+           status: 'pending_validation', // New posts need validation
+           // rating and ratingCount start at 0 or undefined
+           rating: undefined,
+           ratingCount: 0,
+           // TODO: Handle image upload URL
+       };
+       console.log("Simulating submitting blog post:", newPost);
+       // In real app: Send to backend for validation queue
+       setKineBlogPosts(prev => [...prev, newPost]); // Add locally with pending status for now
+       setIsAddBlogPostModalOpen(false);
+       // Simulate earning points after validation (can't do it here directly)
+       if (kineData) {
+           // Points would be awarded by backend/admin upon validation
+            toast({ title: "Article soumis !", description: `Votre article "${newPost.title}" a été soumis pour validation. Vous recevrez des points après approbation.` });
+       }
+  };
+  // --- End Handle Add Blog Post ---
+
+    // --- Handle Blog Post Rating ---
+    const handleRateBlogPost = (postId: string, rating: number) => {
+        console.log(`Simulating rating post ${postId} with ${rating} stars`);
+        setKineBlogPosts(prevPosts => prevPosts.map(post => {
+            if (post.id === postId) {
+                const newRatingCount = (post.ratingCount ?? 0) + 1;
+                const newTotalRating = (post.rating ?? 0) * (post.ratingCount ?? 0) + rating;
+                const newAverageRating = newTotalRating / newRatingCount;
+                return { ...post, rating: newAverageRating, ratingCount: newRatingCount };
+            }
+            return post;
+        }));
+        // In a real app, you'd save this rating, likely check if the user already rated,
+        // and potentially award points to the author based on average rating thresholds.
+        toast({ title: "Vote enregistré !", description: `Merci d'avoir noté cet article.` });
+         // Simulate potential point reward for the author (if rating pushes them over a threshold)
+         // This logic should ideally be backend based on average rating updates.
+         // Example: if (newAverageRating > 4.5 && authorPoints < threshold) awardPoints(authorId, points);
+    };
+    // --- End Handle Blog Post Rating ---
+
   // --- Handle Program Generated ---
   const handleProgramGenerated = (programDetails: any) => {
        console.log("AI Generated Program Received by Dashboard:", programDetails);
@@ -384,7 +437,7 @@ export default function KineDashboard() {
         </div>
 
        {/* Collapsible Notification Area */}
-        <Accordion type="single" collapsible value={isNotificationsOpen ? "notifications" : ""} onValueChange={(value) => setIsNotificationsOpen(value === "notifications")}>
+        <Accordion type="single" collapsible value={isNotificationsOpen ? "notifications" : ""} onValueChange={(value) => setIsNotificationsOpen(value === "notifications")} className="mb-6">
             <AccordionItem value="notifications" className="border-none">
                 {/* Custom Trigger */}
                 <AccordionTrigger
@@ -424,19 +477,35 @@ export default function KineDashboard() {
 
 
       {/* Main Dashboard */}
-      <Tabs defaultValue="patients" className="w-full">
+      <Tabs defaultValue="chatbot" className="w-full"> {/* Default to chatbot */}
         {/* Updated grid columns and added new tabs */}
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-9 mb-6"> {/* Adjusted grid columns */}
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 mb-6"> {/* Adjusted grid columns */}
+            {/* Highlighted Chatbot Tab */}
+             <TabsTrigger value="chatbot" className="bg-primary/10 text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Bot className="w-4 h-4 mr-1 md:mr-2"/>Chatbot Mak
+             </TabsTrigger>
             <TabsTrigger value="patients"><UserCheck className="w-4 h-4 mr-1 md:mr-2"/>Gestion Patients</TabsTrigger>
-            <TabsTrigger value="generation"><Cog className="w-4 h-4 mr-1 md:mr-2"/>Gén. Programme</TabsTrigger> {/* New Tab */}
-            <TabsTrigger value="exercices"><Dumbbell className="w-4 h-4 mr-1 md:mr-2"/>Base Exercices</TabsTrigger> {/* New Tab */}
-            <TabsTrigger value="chatbot"><Bot className="w-4 h-4 mr-1 md:mr-2"/>Chatbot Mak</TabsTrigger>
+            <TabsTrigger value="generation"><Cog className="w-4 h-4 mr-1 md:mr-2"/>Gén. Programme</TabsTrigger>
+            <TabsTrigger value="exercices"><Dumbbell className="w-4 h-4 mr-1 md:mr-2"/>Base Exercices</TabsTrigger>
             <TabsTrigger value="collaboration"><Users className="w-4 h-4 mr-1 md:mr-2"/>KinéHub Collab</TabsTrigger>
-            <TabsTrigger value="reputation"><BarChart3 className="w-4 h-4 mr-1 md:mr-2"/>KinéHub Réputation</TabsTrigger>
+            {/* <TabsTrigger value="reputation"><BarChart3 className="w-4 h-4 mr-1 md:mr-2"/>KinéHub Réputation</TabsTrigger> REMOVED */}
             <TabsTrigger value="marketplace"><Store className="w-4 h-4 mr-1 md:mr-2"/>Marketplace</TabsTrigger>
             <TabsTrigger value="blog"><BookOpen className="w-4 h-4 mr-1 md:mr-2"/>Blog Pro</TabsTrigger>
-            <TabsTrigger value="certifications"><Award className="w-4 h-4 mr-1 md:mr-2"/>Badges Pro</TabsTrigger>
+            {/* <TabsTrigger value="certifications"><Award className="w-4 h-4 mr-1 md:mr-2"/>Badges Pro</TabsTrigger> REMOVED */}
         </TabsList>
+
+         {/* Kine Chatbot Tab */}
+         <TabsContent value="chatbot">
+             {kineData ? (
+                 <KineChatbot kine={kineData} />
+             ) : (
+                  <Card>
+                    <CardContent className="p-6 text-center text-muted-foreground">
+                        Chargement des informations du kiné...
+                    </CardContent>
+                 </Card>
+             )}
+         </TabsContent>
 
         {/* Patient Management Tab */}
         <TabsContent value="patients" className="space-y-8">
@@ -466,24 +535,24 @@ export default function KineDashboard() {
 
               {/* Selected Patient Details Area */}
               {selectedPatientId && selectedPatient ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Accordion for Patient Info and Assessment */}
-                    <Accordion type="single" collapsible className="w-full lg:col-span-2" defaultValue="patient-info">
-                      <AccordionItem value="patient-info">
-                        <AccordionTrigger className="text-lg font-semibold px-6 py-4 bg-card rounded-t-lg border data-[state=closed]:rounded-b-lg data-[state=closed]:border-b data-[state=open]:border-b-0 hover:no-underline hover:bg-muted/50">
+                <div className="space-y-8"> {/* Changed grid to space-y */}
+                    {/* Collapsible Accordion for Patient Info and Assessment */}
+                     <Accordion type="single" collapsible value={isPatientInfoOpen ? "patient-info" : ""} onValueChange={(value) => setIsPatientInfoOpen(value === "patient-info")}>
+                      <AccordionItem value="patient-info" className="border rounded-lg shadow-md overflow-hidden">
+                        <AccordionTrigger className="text-lg font-semibold px-6 py-4 bg-card hover:bg-muted/50 hover:no-underline data-[state=open]:border-b">
                             <div className="flex items-center gap-2">
                                 <UserCheck className="w-5 h-5 text-primary" />
                                 Informations & Bilan - {selectedPatientName}
                             </div>
                         </AccordionTrigger>
-                        <AccordionContent className="border border-t-0 rounded-b-lg bg-card p-0">
+                        <AccordionContent className="bg-card p-0"> {/* Remove default padding */}
                           <PatientInfoForm patient={selectedPatient} onSave={handleSavePatientInfo} />
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>
-                   <div className="lg:col-span-2">
-                        <PatientFeedbackDisplay patientId={selectedPatientId} />
-                   </div>
+
+                   {/* Feedback Display always visible below accordion */}
+                   <PatientFeedbackDisplay patientId={selectedPatientId} />
                    {/* TODO: Add Progress Test Results display for Kine */}
                    {/* <div className="lg:col-span-2"> ...ProgressTestResultsDisplay... </div> */}
                 </div>
@@ -539,20 +608,7 @@ export default function KineDashboard() {
          </TabsContent>
 
 
-         {/* Kine Chatbot Tab */}
-         <TabsContent value="chatbot">
-             {kineData ? (
-                 <KineChatbot kine={kineData} />
-             ) : (
-                  <Card>
-                    <CardContent className="p-6 text-center text-muted-foreground">
-                        Chargement des informations du kiné...
-                    </CardContent>
-                 </Card>
-             )}
-         </TabsContent>
-
-        {/* KinéHub Collaboration Tab */}
+         {/* KinéHub Collaboration Tab */}
         <TabsContent value="collaboration">
              {kineData && selectedPatient ? (
                  <KineCollaborationHub
@@ -571,22 +627,8 @@ export default function KineDashboard() {
              )}
         </TabsContent>
 
-         {/* KinéHub Reputation Tab */}
-         <TabsContent value="reputation">
-             {kineData ? (
-                <KineReputationDisplay
-                    kine={kineData}
-                    rankings={mockKineRankings} // Pass mock rankings
-                 />
-             ) : (
-                  <Card>
-                    <CardContent className="p-6 text-center text-muted-foreground">
-                        Chargement des informations de réputation...
-                    </CardContent>
-                 </Card>
-             )}
-
-         </TabsContent>
+         {/* KinéHub Reputation Tab - REMOVED */}
+         {/* <TabsContent value="reputation"> ... </TabsContent> */}
 
 
         {/* Marketplace Tab */}
@@ -600,26 +642,34 @@ export default function KineDashboard() {
         </TabsContent>
 
         {/* Blog Pro Tab (using shared BlogDisplay) */}
-        <TabsContent value="blog">
+        <TabsContent value="blog" className="space-y-6">
+             <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20">
+                 <BookOpen className="h-4 w-4 !text-primary" />
+                 <AlertTitle className="ml-6 text-primary">Partagez votre Expertise</AlertTitle>
+                 <AlertDescription className="ml-6 text-primary/90">
+                     Contribuez au blog professionnel en soumettant des résumés d'articles scientifiques ou des synthèses de bonnes pratiques. Chaque article validé vous rapporte des points et améliore votre visibilité. Les articles les mieux notés par vos pairs rapportent encore plus !
+                 </AlertDescription>
+             </Alert>
+             {/* Add Blog Post Form (Modal Trigger) */}
+             <div className="text-right">
+                 <Button onClick={() => setIsAddBlogPostModalOpen(true)}>
+                     <Edit className="mr-2 h-4 w-4" /> Proposer un Article
+                 </Button>
+             </div>
              <BlogDisplay
                 posts={kineBlogPosts}
                 title="Blog Professionnel - Articles & Synthèses"
-                description="Consultez des résumés d'articles scientifiques et des synthèses pour votre pratique."
+                description="Consultez et notez les résumés d'articles scientifiques et les synthèses pour votre pratique."
                 showAuthor={true} // Show author for kine blog
                 showSearch={true} // Enable search for kine blog
+                allowRating={true} // Allow kine to rate posts
+                onRatePost={handleRateBlogPost} // Pass rating handler
             />
         </TabsContent>
 
 
-         {/* Certifications Tab */}
-        <TabsContent value="certifications">
-            <KineCertificationManager
-                certifications={certifications}
-                title="Mes Badges Professionnels"
-                description="Visualisez vos badges de compétence et de formation. Ils sont visibles par vos patients."
-                showPoints={true} // Show points required for badges in this view
-            />
-        </TabsContent>
+         {/* Certifications Tab - REMOVED */}
+        {/* <TabsContent value="certifications"> ... </TabsContent> */}
 
       </Tabs>
 
@@ -630,6 +680,13 @@ export default function KineDashboard() {
            onClose={() => setIsAddPatientModalOpen(false)}
            onPatientAdded={handleAddPatient}
        />
+
+        {/* Add Blog Post Modal (Placeholder) */}
+        <AddBlogPostForm
+            isOpen={isAddBlogPostModalOpen}
+            onClose={() => setIsAddBlogPostModalOpen(false)}
+            onSubmit={handleAddBlogPost}
+        />
 
     </div>
   );
