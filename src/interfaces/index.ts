@@ -1,5 +1,6 @@
 
 
+
 export interface Exercise {
   id: string;
   nom: string;
@@ -150,9 +151,9 @@ export interface ShopProgram {
     targetAudience: string[]; // Required, multi-select (e.g., ['débutants', 'sportifs'])
     specificPathologies?: string; // Optional, text or keywords (e.g., "LCA, coiffe des rotateurs")
     therapeuticGoals: string[]; // Required, max 3 choices (e.g., ['Renforcement musculaire', 'Gain d’amplitude'])
-    programDuration: number; // Required (4, 8, 12)
-    recommendedFrequency: number; // Required (sessions per week)
-    averageSessionDuration: number; // Required (15, 30, 45 min)
+    programDuration?: number; // Changed to Optional (4, 8, 12)
+    recommendedFrequency?: number; // Changed to Optional (sessions per week)
+    averageSessionDuration?: number; // Changed to Optional (15, 30, 45 min)
     exerciseList: ProgramExercise[]; // Required, capture objectif, matériel per exercise
     majorContraindications: string; // Required textarea
     qualityCertification: boolean; // Required checkbox
@@ -239,4 +240,19 @@ export interface AddExerciseFormData {
   defaultSéries?: number;
   defaultRépétitions?: number;
 }
-```
+
+// Interface for Job Postings
+export interface JobPosting {
+    id: string;
+    kineId: string; // ID of the Kine who posted
+    kineName: string; // Name of the Kine/Cabinet
+    title: string; // e.g., "Recherche Remplaçant(e) Juillet 2024"
+    description: string;
+    location: string; // City/Address
+    type: 'remplacement' | 'assistanat' | 'collaboration'; // Type of position
+    startDate?: string; // ISO Date
+    endDate?: string; // ISO Date (for replacements)
+    contactEmail: string;
+    publishDate: string; // ISO Date
+    status: 'active' | 'filled' | 'expired';
+}

@@ -1,5 +1,6 @@
 
 
+
 // @refresh reset - Prevent error during compilation
 'use client';
 
@@ -22,11 +23,13 @@ import KineCollaborationHub from '@/components/kine/kine-collaboration-hub'; // 
 // import KineReputationDisplay from '@/components/kine/kine-reputation-display'; // Removed import
 import AddExerciseForm from '@/components/kine/add-exercise-form'; // Import AddExerciseForm
 import ProgramGenerator from '@/components/kine/program-generator'; // Import ProgramGenerator
+import JobBoard from '@/components/kine/job-board'; // Import JobBoard
+import AddJobPostingModal from '@/components/kine/add-job-posting-modal'; // Import AddJobPostingModal
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import type { Patient, Kine, Feedback, MessageToKine, ShopProgram, BlogPost, RehabProtocol, CertificationBadge, Exercise, BlogPostFormData } from '@/interfaces';
+import type { Patient, Kine, Feedback, MessageToKine, ShopProgram, BlogPost, RehabProtocol, CertificationBadge, Exercise, BlogPostFormData, JobPosting } from '@/interfaces'; // Added JobPosting
 import { mockFeedbacks } from '@/components/kine/mock-data';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Award, ChevronDown, ChevronUp, Bot, Share2, Star, Trophy, Users, BarChart3, Crown, Dumbbell, Cog, Edit, Brain, Info, Send } from 'lucide-react'; // Added Dumbbell, Cog, Edit, Brain, Info, Send
+import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Award, ChevronDown, ChevronUp, Bot, Share2, Star, Trophy, Users, BarChart3, Crown, Dumbbell, Cog, Edit, Brain, Info, Send, Briefcase } from 'lucide-react'; // Added Dumbbell, Cog, Edit, Brain, Info, Send, Briefcase
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import KineCertificationDisplay from '@/components/patient/kine-certification-display'; // Import display component (can reuse)
@@ -88,6 +91,12 @@ const mockKineBlogPosts: BlogPost[] = [
      { id: 'kblog3', title: 'Syndrome Douloureux Fémoro-Patellaire : Diagnostic et Traitement', summary: 'Critères diagnostiques et revue des interventions efficaces (renforcement quadricipital et fessier, taping, orthèses plantaires).', publishDate: '2024-06-10T00:00:00.000Z', tags: ['genou', 'SDFP', 'syndrome rotulien', 'diagnostic', 'traitement'], author: 'Dr. Sophie Leroy', contentUrl: '#', imageUrl: 'https://picsum.photos/seed/pfps/300/150', rating: 4.5, ratingCount: 10 }, // Added rating
 ];
 
+// Mock Job Postings
+const initialMockJobPostings: JobPosting[] = [
+    { id: 'job1', kineId: 'kineTest1', kineName: 'Cabinet Leroy & Associés', title: 'Recherche Remplaçant(e) Août 2024', description: 'Recherche MKDE pour remplacement du 1er au 31 août. Cabinet de groupe pluridisciplinaire, patientèle variée (sport, rhumato). Rétrocession 80/20.', location: 'Paris 15e', type: 'remplacement', startDate: '2024-08-01T00:00:00.000Z', endDate: '2024-08-31T00:00:00.000Z', contactEmail: 'sophie.leroy@kine.fr', publishDate: '2024-07-15T00:00:00.000Z', status: 'active' },
+    { id: 'job2', kineId: 'kineTest2', kineName: 'Alain Dubois MKDE', title: 'Propose Assistanat Temps Plein', description: 'Cabinet spécialisé en pédiatrie recherche assistant(e) motivé(e) pour rejoindre une équipe dynamique. Création de poste, patientèle assurée.', location: 'Lyon 6e', type: 'assistanat', contactEmail: 'alain.dubois@kine.fr', publishDate: '2024-07-20T00:00:00.000Z', status: 'active' },
+];
+
 // Mock other Kines for collaboration examples
 const mockOtherKines: Kine[] = [
     { id: 'kineTest2', nom: 'Dubois', prénom: 'Alain', email: 'alain.dubois@kine.fr', spécialité: 'Pédiatrie', ville: 'Paris' },
@@ -116,6 +125,7 @@ export default function KineDashboard() {
   const [notifications, setNotifications] = useState<{ feedbackAlerts: Feedback[], messages: MessageToKine[] }>({ feedbackAlerts: [], messages: [] });
   const [isAddPatientModalOpen, setIsAddPatientModalOpen] = useState(false);
   const [isAddBlogPostModalOpen, setIsAddBlogPostModalOpen] = useState(false); // State for blog post modal
+  const [isAddJobPostingModalOpen, setIsAddJobPostingModalOpen] = useState(false); // State for job posting modal
   const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState('');
   const [expiringSubscriptions, setExpiringSubscriptions] = useState<Patient[]>([]);
@@ -127,6 +137,8 @@ export default function KineDashboard() {
   const [kineBlogPosts, setKineBlogPosts] = useState<BlogPost[]>(mockKineBlogPosts); // Now mutable
   const [certifications, setCertifications] = useState<CertificationBadge[]>(initialMockKine.certifications || []);
   const [exerciseDatabase, setExerciseDatabase] = useState<Exercise[]>(mockExerciseDatabase); // State for exercise DB
+  const [jobPostings, setJobPostings] = useState<JobPosting[]>(initialMockJobPostings); // State for job postings
+
 
   // Gamification state
   const [currentPoints, setCurrentPoints] = useState(initialMockKine.progressPoints || 0);
@@ -356,6 +368,28 @@ export default function KineDashboard() {
   }
    // --- End Handle Program Generated ---
 
+   // --- Handle Add Job Posting ---
+   const handleAddJobPosting = (jobPostingData: Omit<JobPosting, 'id' | 'kineId' | 'kineName' | 'publishDate' | 'status'>) => {
+       if (!kineData) return;
+       const newJob: JobPosting = {
+           ...jobPostingData,
+           id: `job${jobPostings.length + 1}`,
+           kineId: kineData.id,
+           kineName: `${kineData.prénom} ${kineData.nom}`, // Or a cabinet name if available
+           publishDate: new Date().toISOString(),
+           status: 'active',
+       };
+       console.log("Simulating adding job posting:", newJob);
+       setJobPostings(prev => [newJob, ...prev]); // Add to the beginning of the list
+       setIsAddJobPostingModalOpen(false);
+       toast({ title: "Annonce publiée", description: `Votre annonce "${newJob.title}" est maintenant visible.` });
+        // Optionally award points
+        const pointsEarned = 15;
+        setKineData(prev => prev ? ({ ...prev, progressPoints: (prev.progressPoints || 0) + pointsEarned }) : prev);
+        toast({ title: "Activité enregistrée !", description: `Vous avez gagné ${pointsEarned} points pour la publication d'une annonce.` });
+   };
+   // --- End Handle Add Job Posting ---
+
 
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
   const selectedPatientName = selectedPatient ? `${selectedPatient.prénom} ${selectedPatient.nom}` : 'le patient sélectionné';
@@ -479,17 +513,16 @@ export default function KineDashboard() {
       {/* Main Dashboard */}
       <Tabs defaultValue="chatbot" className="w-full"> {/* Default to chatbot */}
         {/* Updated grid columns and removed integrated tabs */}
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6"> {/* Adjusted grid columns */}
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 mb-6"> {/* Adjusted grid columns */}
             {/* Highlighted Chatbot Tab */}
              <TabsTrigger value="chatbot" className="bg-primary/10 text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Bot className="w-4 h-4 mr-1 md:mr-2"/>Chatbot Mak
              </TabsTrigger>
             <TabsTrigger value="patients"><UserCheck className="w-4 h-4 mr-1 md:mr-2"/>Gestion Patients</TabsTrigger>
-            {/* <TabsTrigger value="generation"><Cog className="w-4 h-4 mr-1 md:mr-2"/>Gén. Programme</TabsTrigger> REMOVED */}
             <TabsTrigger value="exercices"><Dumbbell className="w-4 h-4 mr-1 md:mr-2"/>Base Exercices</TabsTrigger>
-            {/* <TabsTrigger value="collaboration"><Users className="w-4 h-4 mr-1 md:mr-2"/>KinéHub Collab</TabsTrigger> REMOVED */}
             <TabsTrigger value="marketplace"><Store className="w-4 h-4 mr-1 md:mr-2"/>Marketplace</TabsTrigger>
             <TabsTrigger value="blog"><BookOpen className="w-4 h-4 mr-1 md:mr-2"/>Blog Pro</TabsTrigger>
+            <TabsTrigger value="jobs"><Briefcase className="w-4 h-4 mr-1 md:mr-2"/>Annonces</TabsTrigger> {/* New Tab */}
         </TabsList>
 
          {/* Kine Chatbot Tab */}
@@ -640,10 +673,7 @@ export default function KineDashboard() {
               )}
         </TabsContent>
 
-         {/* Program Generation Tab - REMOVED */}
-         {/* <TabsContent value="generation"> ... </TabsContent> */}
-
-          {/* Exercise Database Tab */}
+         {/* Exercise Database Tab */}
          <TabsContent value="exercices" className="space-y-6">
              {/* Added Alert */}
              <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20">
@@ -673,14 +703,6 @@ export default function KineDashboard() {
                 </CardContent>
              </Card>
          </TabsContent>
-
-
-         {/* KinéHub Collaboration Tab - REMOVED */}
-         {/* <TabsContent value="collaboration"> ... </TabsContent> */}
-
-         {/* KinéHub Reputation Tab - REMOVED */}
-         {/* <TabsContent value="reputation"> ... </TabsContent> */}
-
 
         {/* Marketplace Tab */}
         <TabsContent value="marketplace" className="space-y-6">
@@ -727,9 +749,31 @@ export default function KineDashboard() {
             />
         </TabsContent>
 
+        {/* Job Board Tab */}
+        <TabsContent value="jobs" className="space-y-6">
+            <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20">
+                <Briefcase className="h-4 w-4 !text-primary" />
+                <AlertTitle className="ml-6 text-primary">Espace Annonces Professionnelles</AlertTitle>
+                <AlertDescription className="ml-6 text-primary/90 text-xs">
+                    Consultez ou publiez des annonces pour des remplacements, assistanats ou collaborations entre kinésithérapeutes.
+                </AlertDescription>
+            </Alert>
+            <div className="text-right">
+                <Button onClick={() => setIsAddJobPostingModalOpen(true)}>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Publier une Annonce
+                </Button>
+            </div>
+            {kineData ? (
+                <JobBoard jobPostings={jobPostings} currentKineId={kineData.id} />
+            ) : (
+                 <Card>
+                    <CardContent className="p-6 text-center text-muted-foreground">
+                        Chargement...
+                    </CardContent>
+                 </Card>
+            )}
+        </TabsContent>
 
-         {/* Certifications Tab - REMOVED */}
-        {/* <TabsContent value="certifications"> ... </TabsContent> */}
 
       </Tabs>
 
@@ -748,7 +792,15 @@ export default function KineDashboard() {
             onSubmit={handleAddBlogPost}
         />
 
+        {/* Add Job Posting Modal */}
+        <AddJobPostingModal
+            isOpen={isAddJobPostingModalOpen}
+            onClose={() => setIsAddJobPostingModalOpen(false)}
+            onSubmit={handleAddJobPosting}
+        />
+
     </div>
   );
 }
+
 
