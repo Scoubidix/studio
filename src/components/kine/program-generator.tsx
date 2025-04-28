@@ -14,8 +14,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'; // Import FormDescription
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Sparkles, Cog } from 'lucide-react';
-import type { Patient, Kine, ProgramGenerationInput } from '@/interfaces';
+import type { Patient, Kine, ProgramGenerationInput, GenerateExerciseProgramOutput } from '@/interfaces'; // Import interfaces including output type
 import { generateExerciseProgram } from '@/ai/flows/exercise-program-generation'; // Import Genkit flow
+import ReactMarkdown from 'react-markdown'; // Import react-markdown
+import { ScrollArea } from '@/components/ui/scroll-area'; // Import ScrollArea
 
 // --- Available Equipment Options ---
 const equipmentOptions = [
@@ -55,13 +57,13 @@ type ProgramGenerationFormData = z.infer<typeof programGenerationSchema>;
 interface ProgramGeneratorProps {
   patient: Patient;
   kine: Kine;
-  onProgramGenerated: (programDetails: any) => void; // Define more specific type later
+  onProgramGenerated: (programDetails: GenerateExerciseProgramOutput) => void; // Update type to match Genkit output
 }
 
 export default function ProgramGenerator({ patient, kine, onProgramGenerated }: ProgramGeneratorProps) {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedProgram, setGeneratedProgram] = useState<string | null>(null);
+  const [generatedProgramOutput, setGeneratedProgramOutput] = useState<GenerateExerciseProgramOutput | null>(null); // Store the full output object
 
   const form = useForm<ProgramGenerationFormData>({
     resolver: zodResolver(programGenerationSchema),
@@ -75,7 +77,7 @@ export default function ProgramGenerator({ patient, kine, onProgramGenerated }: 
 
   const handleGenerateProgram = async (values: ProgramGenerationFormData) => {
     setIsGenerating(true);
-    setGeneratedProgram(null);
+    setGeneratedProgramOutput(null); // Reset previous output
 
     const input: ProgramGenerationInput = {
         patientCondition: patient.pathologies.join(', ') || 'Non spécifié',
@@ -90,38 +92,15 @@ export default function ProgramGenerator({ patient, kine, onProgramGenerated }: 
     console.log("Sending data to AI for program generation:", input);
 
     try {
-        // TODO: Update Genkit flow 'generateExerciseProgram' to accept and use new fields
-        // const result = await generateExerciseProgram(input);
-        // console.log("AI Generated Program (Raw):", result.exerciseProgram);
-        // setGeneratedProgram(result.exerciseProgram); // Display the raw program for now
-        // onProgramGenerated(result.exerciseProgram); // Pass raw data to parent
-
-        // --- Mock Response (Remove when Genkit flow is updated) ---
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        const mockProgramText = `
-Programme pour ${patient.prénom} ${patient.nom} (Condition: ${input.patientCondition})
-Objectifs: ${input.patientGoals}
-Matériel: ${input.availableEquipment.join(', ')}
-Jours: ${input.workoutDays.join(', ')}
-Remarques: ${input.specificRemarks || 'Aucune'}
-
-Séance Type (Exemple - à générer par IA):
-1. Échauffement (5 min)
-2. Squats (si matériel aucun/haltères) - 3x12
-3. Rowing Élastique (si matériel elastiques) - 3x15
-4. Étirement Ischios - 2x30sec
-5. Gainage planche - 3x30sec
-
-Refroidissement (5 min)
-        `;
-        setGeneratedProgram(mockProgramText);
-        onProgramGenerated(mockProgramText);
-        // --- End Mock Response ---
-
+        // Call the actual Genkit flow
+        const result: GenerateExerciseProgramOutput = await generateExerciseProgram(input);
+        console.log("AI Generated Program Output:", result);
+        setGeneratedProgramOutput(result); // Store the output object
+        onProgramGenerated(result); // Pass full output object to parent
 
         toast({
             title: "Programme Généré !",
-            description: "L'IA a créé une proposition de programme. Vérifiez et ajustez si besoin.",
+            description: "L'IA a créé une proposition de programme d'un mois. Vérifiez et ajustez si besoin.",
         });
 
     } catch (error) {
@@ -143,7 +122,7 @@ Refroidissement (5 min)
           <Cog className="w-5 h-5 text-primary" /> Générateur de Programme IA
         </CardTitle>
         <CardDescription>
-          Configurez les paramètres pour que l'IA génère un programme personnalisé pour <span className="font-semibold">{patient.prénom} {patient.nom}</span>.
+          Configurez les paramètres pour que l'IA génère un programme progressif d'un mois pour <span className="font-semibold">{patient.prénom} {patient.nom}</span>.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -265,15 +244,32 @@ Refroidissement (5 min)
           </form>
         </Form>
 
-        {/* Display Generated Program (Raw Text for now) */}
-        {generatedProgram && !isGenerating && (
+        {/* Display Generated Program */}
+        {generatedProgramOutput?.exerciseProgram && !isGenerating && (
             <div className='mt-6 pt-6 border-t'>
-                 <h4 className="font-semibold mb-2">Programme Généré (Proposition IA) :</h4>
-                 <Textarea readOnly value={generatedProgram} rows={15} className='text-xs bg-muted/30' />
+                 <h4 className="font-semibold mb-2 text-lg">Programme Généré (Proposition IA - 1 Mois) :</h4>
+                  {/* Use ScrollArea for potentially long content */}
+                  <ScrollArea className="h-[500px] border rounded-md p-4 bg-muted/30">
+                      {/* Render Markdown content */}
+                      <ReactMarkdown
+                         className="prose prose-sm dark:prose-invert max-w-none" // Basic prose styling
+                         components={{ // Customize rendering if needed
+                           h2: ({node, ...props}) => <h2 className="text-lg font-semibold mt-4 mb-2" {...props} />,
+                           h3: ({node, ...props}) => <h3 className="text-md font-semibold mt-3 mb-1" {...props} />,
+                           ul: ({node, ...props}) => <ul className="list-disc pl-5 space-y-1" {...props} />,
+                           li: ({node, ...props}) => <li className="text-xs" {...props} />,
+                           p: ({node, ...props}) => <p className="text-xs mb-2" {...props} />,
+                           strong: ({node, ...props}) => <strong className="font-medium text-foreground" {...props} />,
+                         }}
+                       >
+                          {generatedProgramOutput.exerciseProgram}
+                      </ReactMarkdown>
+                  </ScrollArea>
                  <p className="text-xs text-muted-foreground mt-2">
                      Vérifiez attentivement cette proposition avant de l'assigner au patient. Vous pourrez la modifier.
                  </p>
                  {/* TODO: Add button to "Assign Program" or "Edit Program" */}
+                 {/* Example: <Button variant="outline" size="sm" className="mt-2">Assigner ce Programme</Button> */}
             </div>
         )}
 
@@ -281,3 +277,4 @@ Refroidissement (5 min)
     </Card>
   );
 }
+```

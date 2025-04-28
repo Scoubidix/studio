@@ -87,8 +87,50 @@ export default {
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out'
-  		}
+  		},
+       typography: ({ theme }: { theme: any }) => ({ // Added typography configuration
+            DEFAULT: {
+                css: {
+                '--tw-prose-body': theme('colors.foreground'),
+                '--tw-prose-headings': theme('colors.primary'),
+                '--tw-prose-lead': theme('colors.foreground'),
+                '--tw-prose-links': theme('colors.primary'),
+                '--tw-prose-bold': theme('colors.foreground'),
+                '--tw-prose-counters': theme('colors.muted.foreground'),
+                '--tw-prose-bullets': theme('colors.muted.foreground'),
+                '--tw-prose-hr': theme('colors.border'),
+                '--tw-prose-quotes': theme('colors.foreground'),
+                '--tw-prose-quote-borders': theme('colors.border'),
+                '--tw-prose-captions': theme('colors.muted.foreground'),
+                '--tw-prose-code': theme('colors.foreground'),
+                '--tw-prose-pre-code': theme('colors.foreground'),
+                '--tw-prose-pre-bg': theme('colors.muted.DEFAULT'),
+                '--tw-prose-th-borders': theme('colors.border'),
+                '--tw-prose-td-borders': theme('colors.border'),
+                '--tw-prose-invert-body': theme('colors.foreground'), // Use foreground for dark mode body
+                '--tw-prose-invert-headings': theme('colors.primary'), // Use primary for dark mode headings
+                '--tw-prose-invert-lead': theme('colors.foreground'),
+                '--tw-prose-invert-links': theme('colors.primary'),
+                '--tw-prose-invert-bold': theme('colors.foreground'),
+                '--tw-prose-invert-counters': theme('colors.muted.foreground'),
+                '--tw-prose-invert-bullets': theme('colors.muted.foreground'),
+                '--tw-prose-invert-hr': theme('colors.border'),
+                '--tw-prose-invert-quotes': theme('colors.foreground'),
+                '--tw-prose-invert-quote-borders': theme('colors.border'),
+                '--tw-prose-invert-captions': theme('colors.muted.foreground'),
+                '--tw-prose-invert-code': theme('colors.foreground'),
+                '--tw-prose-invert-pre-code': theme('colors.foreground'),
+                '--tw-prose-invert-pre-bg': theme('colors.muted.DEFAULT'), // Use muted for dark pre background
+                '--tw-prose-invert-th-borders': theme('colors.border'),
+                '--tw-prose-invert-td-borders': theme('colors.border'),
+                },
+            },
+        }),
   	}
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+      require("tailwindcss-animate"),
+      require("@tailwindcss/typography"), // Added typography plugin
+    ],
 } satisfies Config;
+```

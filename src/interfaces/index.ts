@@ -214,14 +214,14 @@ export interface ProgressTestResult {
     notes?: string;
 }
 
-// For Program Generation AI Input
+// For Program Generation AI Input - Ensure this matches the Genkit Flow schema
 export interface ProgramGenerationInput {
   patientCondition: string;
   patientGoals: string;
   patientLimitations: string;
-  kineSpecialty: string;
-  availableEquipment: string[]; // e.g., ["Elastiques", "Haltères"]
-  workoutDays: string[]; // e.g., ["Lundi", "Mercredi", "Vendredi"]
+  kineSpecialty: string; // Match Genkit schema
+  availableEquipment: string[];
+  workoutDays: string[];
   specificRemarks?: string;
 }
 
@@ -239,3 +239,4 @@ export interface AddExerciseFormData {
   defaultSéries?: number;
   defaultRépétitions?: number;
 }
+```
