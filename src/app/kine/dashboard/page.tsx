@@ -76,7 +76,7 @@ const mockMessages: MessageToKine[] = [
 
 // Mock data for new Kine features
 const mockKineShopPrograms: ShopProgram[] = [
-    { id: 'shopProg2', kine_id: 'kineTest1', title: 'Programme Anti-Mal de Dos (Bureau)', description: 'Exercices simples pour soulager les tensions...', targetAudience: 'Travailleurs de bureau', price: 19.99, currency: 'EUR', exerciseList: [], tags: ['dos', 'bureau'], imageUrl: 'https://picsum.photos/seed/desk/300/150' },
+    { id: 'shopProg2', kine_id: 'kineTest1', title: 'Programme Anti-Mal de Dos (Bureau)', description: 'Exercices simples pour soulager les tensions...', targetAudience: ['bureau', 'sedentaire'], price: 19.99, currency: 'EUR', exerciseList: [], tags: ['dos', 'bureau'], imageUrl: 'https://picsum.photos/seed/desk/300/150', qualityCertification: true, therapeuticGoals: ['douleur', 'mobilite'], programDuration: 4, recommendedFrequency: 3, averageSessionDuration: 15, majorContraindications: 'Hernie discale aiguë', status: 'validated' },
 ];
 
 // Mock Blog posts for Kine (Scientific summaries)

@@ -243,7 +243,8 @@ export default function MarketplaceManager({ kineId, existingPrograms, onSave, o
                          <h4 className="font-semibold">{program.title}</h4>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">
-                        {program.targetAudience?.join(', ')} - {program.price?.toFixed(2)} {program.currency}
+                        {/* Ensure targetAudience is an array before joining */}
+                        {Array.isArray(program.targetAudience) ? program.targetAudience.join(', ') : program.targetAudience} - {program.price?.toFixed(2)} {program.currency}
                     </p>
                      {program.tags && program.tags.length > 0 && (
                          <div className="flex flex-wrap gap-1 mt-1">
@@ -545,4 +546,3 @@ export default function MarketplaceManager({ kineId, existingPrograms, onSave, o
     </Card>
   );
 }
-
