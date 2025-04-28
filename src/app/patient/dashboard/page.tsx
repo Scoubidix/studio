@@ -18,11 +18,12 @@ import ProgressTestDisplay from '@/components/patient/progress-test-display'; //
 import KineCertificationDisplay from '@/components/patient/kine-certification-display'; // Import new component
 import PatientBadgesDisplay from '@/components/patient/patient-badges-display'; // Import new component
 import Image from 'next/image';
-import { Dumbbell, Activity, StretchVertical, Trophy, CalendarDays, ArrowRight, Target, Share2, BookOpen, Microscope, ShoppingBag, ClipboardCheck, Award, BarChart, Bot, Medal, Edit } from 'lucide-react'; // Added Bot, Medal, Edit
+import { Dumbbell, Activity, StretchVertical, Trophy, CalendarDays, ArrowRight, Target, Share2, BookOpen, Microscope, ShoppingBag, ClipboardCheck, Award, BarChart, Bot, Medal, Edit, Brain, Info, ListChecks, HelpCircle } from 'lucide-react'; // Added Bot, Medal, Edit, Brain, Info, ListChecks, HelpCircle
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import AddBlogPostForm from '@/components/kine/add-blog-post-form'; // Import placeholder
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert
 
 // --- Mock Data (Replace with actual data fetching later) ---
 const mockExercises: Exercise[] = [
@@ -301,7 +302,7 @@ export default function PatientDashboard() {
            <TabsTrigger value="chatbot" className="bg-primary/10 text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Bot className="w-4 h-4 mr-1 md:mr-2"/>Assistant
            </TabsTrigger>
-          <TabsTrigger value="programme"><Dumbbell className="w-4 h-4 mr-1 md:mr-2"/>Programme</TabsTrigger>
+          <TabsTrigger value="programme"><ListChecks className="w-4 h-4 mr-1 md:mr-2"/>Programme</TabsTrigger> {/* Updated Icon */}
           <TabsTrigger value="tests"><Activity className="w-4 h-4 mr-1 md:mr-2"/>Tests Prog.</TabsTrigger>
           <TabsTrigger value="blog"><BookOpen className="w-4 h-4 mr-1 md:mr-2"/>Infos</TabsTrigger>
           <TabsTrigger value="rapports"><Microscope className="w-4 h-4 mr-1 md:mr-2"/>Rapports</TabsTrigger>
@@ -309,7 +310,15 @@ export default function PatientDashboard() {
         </TabsList>
 
          {/* Patient Chatbot Tab */}
-        <TabsContent value="chatbot">
+        <TabsContent value="chatbot" className="space-y-6">
+            {/* Moved Alert here */}
+            <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20">
+                <Info className="h-4 w-4 !text-primary" />
+                <AlertTitle className="ml-6 text-primary">Un assistant à votre service</AlertTitle>
+                <AlertDescription className="ml-6 text-primary/90 text-xs">
+                    Cet assistant est là pour vous guider ! Il connaît <span className='font-semibold'>votre programme spécifique</span>, vos <span className='font-semibold'>objectifs personnels</span> et est <span className='font-semibold'>personnalisé grâce aux conseils spécifiques de votre kiné</span>. Il agit comme l'assistant de votre thérapeute, connaissant ses recommandations pour vous. N'hésitez pas à lui poser des questions sur un exercice, une douleur ressentie (sans demander de diagnostic médical), ou si vous avez un doute. S'il ne peut pas répondre, il vous proposera de <span className='font-semibold'>contacter directement votre kiné</span>.
+                </AlertDescription>
+            </Alert>
            {mockPatientData ? (
                 <PatientChatbot patient={mockPatientData} />
            ) : (
@@ -323,6 +332,14 @@ export default function PatientDashboard() {
 
         {/* Programme Tab with Feedback Form */}
         <TabsContent value="programme" className="space-y-8">
+            {/* Added Alert */}
+             <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20">
+                 <ListChecks className="h-4 w-4 !text-primary" />
+                 <AlertTitle className="ml-6 text-primary">Votre Feuille de Route Personnalisée</AlertTitle>
+                 <AlertDescription className="ml-6 text-primary/90 text-xs">
+                     Suivez les exercices prescrits par votre kiné. Cliquez sur chaque exercice pour voir les <span className='font-semibold'>détails et instructions</span>. N'oubliez pas de remplir le <span className='font-semibold'>feedback</span> après chaque séance pour aider votre kiné à adapter au mieux votre programme.
+                 </AlertDescription>
+             </Alert>
             <Card className="shadow-md">
             <CardHeader>
               <CardTitle>Votre Programme d'Exercices</CardTitle>
@@ -388,6 +405,14 @@ export default function PatientDashboard() {
 
          {/* Progress Tests Tab with Leaderboard/Rewards */}
         <TabsContent value="tests" className="space-y-8">
+             {/* Added Alert */}
+             <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20">
+                 <Activity className="h-4 w-4 !text-primary" />
+                 <AlertTitle className="ml-6 text-primary">Évaluez et Suivez vos Progrès</AlertTitle>
+                 <AlertDescription className="ml-6 text-primary/90 text-xs">
+                     Réalisez régulièrement les tests proposés par votre kiné pour <span className='font-semibold'>mesurer objectivement votre évolution</span>. Vos résultats sont enregistrés et vous rapportent des points. Comparez-vous (anonymement) aux autres patients via le classement et débloquez des <span className='font-semibold'>récompenses</span> !
+                 </AlertDescription>
+             </Alert>
             <ProgressTestDisplay
                 tests={mockProgressTests}
                 patientId={mockPatientData.id}
@@ -453,7 +478,15 @@ export default function PatientDashboard() {
         </TabsContent>
 
         {/* Blog/Info Tab */}
-        <TabsContent value="blog">
+        <TabsContent value="blog" className="space-y-6">
+            {/* Added Alert */}
+            <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20">
+                <BookOpen className="h-4 w-4 !text-primary" />
+                <AlertTitle className="ml-6 text-primary">Informez-vous sur votre Santé</AlertTitle>
+                <AlertDescription className="ml-6 text-primary/90 text-xs">
+                    Consultez des articles et des résumés vulgarisés sur diverses pathologies et conseils de santé, rédigés ou validés par des professionnels. Comprendre votre condition est une étape clé de votre rééducation.
+                </AlertDescription>
+            </Alert>
              <BlogDisplay
                  posts={mockBlogPosts}
                  title="Infos & Conseils Santé"
@@ -462,12 +495,28 @@ export default function PatientDashboard() {
         </TabsContent>
 
         {/* Medical Reports Tab */}
-        <TabsContent value="rapports">
+        <TabsContent value="rapports" className="space-y-6">
+             {/* Added Alert */}
+             <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20">
+                 <Microscope className="h-4 w-4 !text-primary" />
+                 <AlertTitle className="ml-6 text-primary">Décryptez vos Comptes Rendus</AlertTitle>
+                 <AlertDescription className="ml-6 text-primary/90 text-xs">
+                     Parfois difficiles à comprendre, collez ici le texte de vos comptes rendus médicaux (radio, IRM...). L'IA vous proposera un <span className='font-semibold'>résumé simplifié</span> pour vous aider à saisir les points essentiels. <strong className="block mt-1">Important :</strong> ce résumé ne remplace en aucun cas l'avis et l'interprétation de votre médecin ou de votre kiné.
+                 </AlertDescription>
+             </Alert>
             <MedicalReportSummarizer />
         </TabsContent>
 
         {/* Shop Tab */}
-        <TabsContent value="boutique">
+        <TabsContent value="boutique" className="space-y-6">
+             {/* Added Alert */}
+             <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20">
+                 <ShoppingBag className="h-4 w-4 !text-primary" />
+                 <AlertTitle className="ml-6 text-primary">Boutique de Programmes Experts</AlertTitle>
+                 <AlertDescription className="ml-6 text-primary/90 text-xs">
+                     Explorez des programmes conçus par des kinésithérapeutes pour des objectifs spécifiques (préparation sportive, prévention...). Consultez les <span className='font-semibold'>avis</span>, vérifiez les <span className='font-semibold'>badges</span> du créateur et trouvez le programme complémentaire idéal pour vous.
+                 </AlertDescription>
+             </Alert>
             <ShopDisplay
                 programs={mockShopPrograms}
                 allKines={mockKines} // Pass the list of all kines

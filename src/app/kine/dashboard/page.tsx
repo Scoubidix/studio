@@ -15,7 +15,7 @@ import NotificationArea from '@/components/kine/notification-area';
 import AddPatientModal from '@/components/kine/add-patient-modal';
 import MarketplaceManager from '@/components/kine/marketplace-manager'; // Import new component
 import BlogDisplay from '@/components/shared/blog-display'; // Import shared BlogDisplay
-import AddBlogPostForm from '@/components/kine/add-blog-post-form'; // Import AddBlogPostForm (placeholder)
+import AddBlogPostForm from '@/components/kine/add-blog-post-form'; // Import AddBlogPostForm
 // import KineCertificationManager from '@/components/kine/kine-certification-manager'; // Removed import
 import KineChatbot from '@/components/kine/kine-chatbot'; // Import KineChatbot
 import KineCollaborationHub from '@/components/kine/kine-collaboration-hub'; // Import new component
@@ -26,7 +26,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import type { Patient, Kine, Feedback, MessageToKine, ShopProgram, BlogPost, RehabProtocol, CertificationBadge, Exercise, BlogPostFormData } from '@/interfaces';
 import { mockFeedbacks } from '@/components/kine/mock-data';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Award, ChevronDown, ChevronUp, Bot, Share2, Star, Trophy, Users, BarChart3, Crown, Dumbbell, Cog, Edit } from 'lucide-react'; // Added Dumbbell, Cog, Edit
+import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Award, ChevronDown, ChevronUp, Bot, Share2, Star, Trophy, Users, BarChart3, Crown, Dumbbell, Cog, Edit, Brain, Info } from 'lucide-react'; // Added Dumbbell, Cog, Edit, Brain, Info
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import KineCertificationDisplay from '@/components/patient/kine-certification-display'; // Import display component (can reuse)
@@ -495,7 +495,15 @@ export default function KineDashboard() {
         </TabsList>
 
          {/* Kine Chatbot Tab */}
-         <TabsContent value="chatbot">
+         <TabsContent value="chatbot" className="space-y-6">
+             {/* Moved Alert here */}
+              <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20">
+                  <Brain className="h-4 w-4 !text-primary" />
+                  <AlertTitle className="ml-6 text-primary">Optimisez votre pratique avec Mak</AlertTitle>
+                  <AlertDescription className="ml-6 text-primary/90 text-xs">
+                      Mak est votre partenaire IA pour une pratique éclairée et efficace. Interrogez-le sur les dernières <span className='font-semibold'>recommandations EBP</span>, demandez des <span className='font-semibold'>synthèses d'articles</span>, obtenez de l'aide pour la <span className='font-semibold'>génération de programmes</span> adaptés ou analysez rapidement les <span className='font-semibold'>tendances des feedbacks patients</span>. Gagnez du temps et enrichissez votre expertise.
+                  </AlertDescription>
+              </Alert>
              {kineData ? (
                  <KineChatbot kine={kineData} />
              ) : (
@@ -509,6 +517,14 @@ export default function KineDashboard() {
 
         {/* Patient Management Tab */}
         <TabsContent value="patients" className="space-y-8">
+             {/* Added Alert */}
+             <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20">
+                 <UserCheck className="h-4 w-4 !text-primary" />
+                 <AlertTitle className="ml-6 text-primary">Gestion Centralisée des Patients</AlertTitle>
+                 <AlertDescription className="ml-6 text-primary/90 text-xs">
+                     Ajoutez de nouveaux patients, consultez et mettez à jour leurs informations, bilans, objectifs et suivez leurs feedbacks et progrès en un seul endroit. Utilisez le sélecteur pour naviguer entre les dossiers.
+                 </AlertDescription>
+             </Alert>
              <Card className="shadow-md">
                 <CardHeader className="flex flex-row items-center justify-between pb-4">
                   <div>
@@ -568,7 +584,15 @@ export default function KineDashboard() {
         </TabsContent>
 
          {/* Program Generation Tab */}
-         <TabsContent value="generation">
+         <TabsContent value="generation" className="space-y-6">
+            {/* Added Alert */}
+             <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20">
+                 <Cog className="h-4 w-4 !text-primary" />
+                 <AlertTitle className="ml-6 text-primary">Génération de Programme Assistée par IA</AlertTitle>
+                 <AlertDescription className="ml-6 text-primary/90 text-xs">
+                    Utilisez la puissance de l'IA pour créer rapidement une base de programme personnalisée. Renseignez les objectifs, le matériel disponible, les jours d'entraînement et les remarques spécifiques. L'IA génère une proposition que vous pouvez ensuite affiner et assigner.
+                 </AlertDescription>
+             </Alert>
             {selectedPatientId && selectedPatient && kineData ? (
                  <ProgramGenerator
                     patient={selectedPatient}
@@ -585,7 +609,15 @@ export default function KineDashboard() {
          </TabsContent>
 
           {/* Exercise Database Tab */}
-         <TabsContent value="exercices">
+         <TabsContent value="exercices" className="space-y-6">
+             {/* Added Alert */}
+             <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20">
+                 <Dumbbell className="h-4 w-4 !text-primary" />
+                 <AlertTitle className="ml-6 text-primary">Votre Bibliothèque d'Exercices Personnalisée</AlertTitle>
+                 <AlertDescription className="ml-6 text-primary/90 text-xs">
+                    Enrichissez la base de données commune en ajoutant vos propres exercices. Détaillez les étapes, objectifs et fournissez des médias (bientôt disponible). Chaque ajout contribue à la plateforme et vous rapporte des points pour débloquer des badges.
+                 </AlertDescription>
+             </Alert>
              <AddExerciseForm onExerciseAdded={handleAddExercise} />
              {/* TODO: Add a component to display/edit existing exercises in the database */}
              <Card className="mt-6 shadow-md">
@@ -609,7 +641,15 @@ export default function KineDashboard() {
 
 
          {/* KinéHub Collaboration Tab */}
-        <TabsContent value="collaboration">
+        <TabsContent value="collaboration" className="space-y-6">
+             {/* Added Alert */}
+             <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20">
+                 <Users className="h-4 w-4 !text-primary" />
+                 <AlertTitle className="ml-6 text-primary">Collaborez Facilement avec vos Confrères</AlertTitle>
+                 <AlertDescription className="ml-6 text-primary/90 text-xs">
+                     Besoin de transférer un patient pendant vos absences ou de partager un dossier pour un avis ou une prise en charge partagée au sein d'un cabinet ? Utilisez KinéHub pour une collaboration fluide et sécurisée entre kinés de la plateforme.
+                 </AlertDescription>
+             </Alert>
              {kineData && selectedPatient ? (
                  <KineCollaborationHub
                     currentKineId={kineData.id}
@@ -632,7 +672,15 @@ export default function KineDashboard() {
 
 
         {/* Marketplace Tab */}
-        <TabsContent value="marketplace">
+        <TabsContent value="marketplace" className="space-y-6">
+             {/* Added Alert */}
+             <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20">
+                 <Store className="h-4 w-4 !text-primary" />
+                 <AlertTitle className="ml-6 text-primary">Créez et Vendez vos Programmes</AlertTitle>
+                 <AlertDescription className="ml-6 text-primary/90 text-xs">
+                     Partagez votre expertise en créant des programmes de rééducation ou de prévention à destination du grand public ou de sportifs. Définissez le public cible, les objectifs, les exercices, et fixez votre prix. Chaque vente contribue à votre réputation.
+                 </AlertDescription>
+             </Alert>
             <MarketplaceManager
                 kineId={kineData?.id || ''}
                 existingPrograms={shopPrograms}
@@ -643,11 +691,12 @@ export default function KineDashboard() {
 
         {/* Blog Pro Tab (using shared BlogDisplay) */}
         <TabsContent value="blog" className="space-y-6">
+             {/* Moved Alert from here */}
              <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20">
                  <BookOpen className="h-4 w-4 !text-primary" />
-                 <AlertTitle className="ml-6 text-primary">Partagez votre Expertise</AlertTitle>
-                 <AlertDescription className="ml-6 text-primary/90">
-                     Contribuez au blog professionnel en soumettant des résumés d'articles scientifiques ou des synthèses de bonnes pratiques. Chaque article validé vous rapporte des points et améliore votre visibilité. Les articles les mieux notés par vos pairs rapportent encore plus !
+                 <AlertTitle className="ml-6 text-primary">Partagez votre Expertise et Restez Informé</AlertTitle>
+                 <AlertDescription className="ml-6 text-primary/90 text-xs">
+                      Consultez les résumés d'articles scientifiques et les synthèses de bonnes pratiques partagés par la communauté. Contribuez en soumettant vos propres articles pour validation. Chaque contribution validée et bien notée vous rapporte des points et améliore votre visibilité.
                  </AlertDescription>
              </Alert>
              {/* Add Blog Post Form (Modal Trigger) */}
@@ -681,7 +730,7 @@ export default function KineDashboard() {
            onPatientAdded={handleAddPatient}
        />
 
-        {/* Add Blog Post Modal (Placeholder) */}
+        {/* Add Blog Post Modal */}
         <AddBlogPostForm
             isOpen={isAddBlogPostModalOpen}
             onClose={() => setIsAddBlogPostModalOpen(false)}

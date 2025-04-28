@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert components
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Keep Alert import for escalation message
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { personalizedPatientChatbot } from '@/ai/flows/patient-chatbot'; // Import the updated Genkit flow
@@ -237,14 +237,7 @@ export default function PatientChatbot({ patient }: PatientChatbotProps) { // De
         </CardHeader>
 
          <CardContent className="flex-grow p-4 overflow-hidden flex flex-col gap-4"> {/* Added padding and flex */}
-            {/* Enhanced Description in Alert */}
-            <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20 flex-shrink-0">
-                <Info className="h-4 w-4 !text-primary" />
-                <AlertTitle className="ml-6 text-primary">Un assistant à votre service</AlertTitle>
-                <AlertDescription className="ml-6 text-primary/90 text-xs">
-                    Cet assistant est là pour vous guider ! Il connaît <span className='font-semibold'>votre programme spécifique</span>, vos <span className='font-semibold'>objectifs personnels</span> et est <span className='font-semibold'>personnalisé grâce aux conseils spécifiques de votre kiné</span>. Il agit comme l'assistant de votre thérapeute, connaissant ses recommandations pour vous. N'hésitez pas à lui poser des questions sur un exercice, une douleur ressentie (sans demander de diagnostic médical), ou si vous avez un doute. S'il ne peut pas répondre, il vous proposera de <span className='font-semibold'>contacter directement votre kiné</span>.
-                </AlertDescription>
-            </Alert>
+            {/* Removed Alert from here, it's now in the parent TabContent */}
 
             {/* Chat Area */}
            <ScrollArea className="h-full flex-grow" ref={scrollAreaRef}> {/* ScrollArea fills remaining space */}

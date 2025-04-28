@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert components
+// Removed Alert import
 import { useToast } from '@/hooks/use-toast';
 import type { Kine } from '@/interfaces'; // Import Kine interface
 import { Loader2, User, Bot, CornerDownLeft, Sparkles, DraftingCompass, Brain } from 'lucide-react'; // Added Brain icon
@@ -136,14 +136,7 @@ export default function KineChatbot({ kine }: KineChatbotProps) {
         </CardHeader>
 
         <CardContent className="flex-grow p-4 overflow-hidden flex flex-col gap-4"> {/* Added padding and flex */}
-            {/* Enhanced Description in Alert */}
-             <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20 flex-shrink-0">
-                 <Brain className="h-4 w-4 !text-primary" />
-                 <AlertTitle className="ml-6 text-primary">Optimisez votre pratique avec Mak</AlertTitle>
-                 <AlertDescription className="ml-6 text-primary/90 text-xs">
-                     Mak est votre partenaire IA pour une pratique éclairée et efficace. Interrogez-le sur les dernières <span className='font-semibold'>recommandations EBP</span>, demandez des <span className='font-semibold'>synthèses d'articles</span>, obtenez de l'aide pour la <span className='font-semibold'>génération de programmes</span> adaptés ou analysez rapidement les <span className='font-semibold'>tendances des feedbacks patients</span>. Gagnez du temps et enrichissez votre expertise.
-                 </AlertDescription>
-             </Alert>
+            {/* Removed Alert from here, it's now in the parent TabContent */}
 
             {/* Chat Area */}
             <ScrollArea className="h-full flex-grow" ref={scrollAreaRef}> {/* ScrollArea fills remaining space */}
