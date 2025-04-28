@@ -6,11 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'; // Use Card for layout
-// Removed Dialog imports
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert components
 import { useToast } from '@/hooks/use-toast';
 import type { Kine } from '@/interfaces'; // Import Kine interface
-import { Loader2, User, Bot, CornerDownLeft, Sparkles, DraftingCompass } from 'lucide-react'; // Example icons
+import { Loader2, User, Bot, CornerDownLeft, Sparkles, DraftingCompass, Brain } from 'lucide-react'; // Added Brain icon
 
 interface ChatMessage {
   id: string;
@@ -123,24 +123,31 @@ export default function KineChatbot({ kine }: KineChatbotProps) {
 
   return (
     <Card className="shadow-md h-[75vh] flex flex-col"> {/* Use Card and set height */}
-        <CardHeader className="border-b flex flex-col p-4 space-y-2"> {/* Changed flex-row to flex-col and added space-y */}
-            <div className="flex items-center gap-3"> {/* Wrap title and icon */}
+        <CardHeader className="border-b p-4"> {/* Removed flex properties */}
+             <div className="flex items-center gap-3"> {/* Wrap title and icon */}
                  <Avatar className="w-10 h-10 border-2 border-accent bg-accent/20 text-accent flex-shrink-0">
                      <AvatarFallback><DraftingCompass className="w-5 h-5" /></AvatarFallback>
                  </Avatar>
                  <div>
                     <CardTitle className="text-lg">Assistant Kiné IA "Mak"</CardTitle>
+                    <CardDescription className="text-sm text-muted-foreground">Votre partenaire IA pour une pratique éclairée.</CardDescription>
                  </div>
-            </div>
-             {/* Enhanced Description */}
-            <CardDescription className="text-sm text-muted-foreground leading-relaxed">
-                 Mak est votre partenaire IA pour une pratique éclairée et efficace. Interrogez-le sur les dernières <span className='font-semibold text-foreground'>recommandations EBP</span>, demandez des <span className='font-semibold text-foreground'>synthèses d'articles</span>, obtenez de l'aide pour la <span className='font-semibold text-foreground'>génération de programmes</span> adaptés ou analysez rapidement les <span className='font-semibold text-foreground'>tendances des feedbacks patients</span>. Gagnez du temps et enrichissez votre expertise.
-            </CardDescription>
+             </div>
         </CardHeader>
 
-        <CardContent className="flex-grow p-0 overflow-hidden"> {/* Content takes remaining space, no padding */}
-            <ScrollArea className="h-full p-4" ref={scrollAreaRef}> {/* ScrollArea fills CardContent */}
-                 <div className="space-y-4 pb-4"> {/* Add padding bottom inside scroll area */}
+        <CardContent className="flex-grow p-4 overflow-hidden flex flex-col gap-4"> {/* Added padding and flex */}
+            {/* Enhanced Description in Alert */}
+             <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20 flex-shrink-0">
+                 <Brain className="h-4 w-4 !text-primary" />
+                 <AlertTitle className="ml-6 text-primary">Optimisez votre pratique avec Mak</AlertTitle>
+                 <AlertDescription className="ml-6 text-primary/90 text-xs">
+                     Mak est votre partenaire IA pour une pratique éclairée et efficace. Interrogez-le sur les dernières <span className='font-semibold'>recommandations EBP</span>, demandez des <span className='font-semibold'>synthèses d'articles</span>, obtenez de l'aide pour la <span className='font-semibold'>génération de programmes</span> adaptés ou analysez rapidement les <span className='font-semibold'>tendances des feedbacks patients</span>. Gagnez du temps et enrichissez votre expertise.
+                 </AlertDescription>
+             </Alert>
+
+            {/* Chat Area */}
+            <ScrollArea className="h-full flex-grow" ref={scrollAreaRef}> {/* ScrollArea fills remaining space */}
+                 <div className="space-y-4 pb-4 pr-2"> {/* Add padding bottom and right */}
                   {messages.map((message) => (
                     <div
                       key={message.id}
@@ -184,7 +191,7 @@ export default function KineChatbot({ kine }: KineChatbotProps) {
         </CardContent>
 
         {/* Input area in Card Footer */}
-         <div className="p-4 border-t bg-muted/30">
+         <div className="p-4 border-t bg-muted/30 flex-shrink-0">
              <div className="flex gap-2 w-full items-center">
               <Input
                 ref={inputRef}

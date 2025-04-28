@@ -7,14 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'; // Use Card for layout
-// Removed Dialog imports
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert components
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { personalizedPatientChatbot } from '@/ai/flows/patient-chatbot'; // Import the updated Genkit flow
 import type { PersonalizedPatientChatbotInput, PersonalizedPatientChatbotOutput } from '@/ai/flows/patient-chatbot';
 import type { Patient, MessageToKine } from '@/interfaces'; // Import Patient interface
-import { Loader2, User, Bot, Send, CornerDownLeft, AlertTriangle, Sparkles } from 'lucide-react'; // Removed MessageSquarePlus
+import { Loader2, User, Bot, Send, CornerDownLeft, AlertTriangle, Sparkles, Info } from 'lucide-react'; // Added Info icon
 
 interface ChatMessage {
   id: string;
@@ -85,7 +85,7 @@ export default function PatientChatbot({ patient }: PatientChatbotProps) { // De
            const welcomeMessage: ChatMessage = {
                 id: 'welcome',
                 sender: 'bot',
-                text: `Bonjour ${patient.prénom} ! Je suis votre assistant virtuel. Je connais votre programme et vos objectifs (${patient.objectifs.join(', ')}). Posez-moi vos questions sur vos exercices, votre ressenti, ou demandez des conseils généraux. Si je ne peux pas répondre, je vous proposerai de contacter votre kiné.` // Updated welcome message
+                 text: `Bonjour ${patient.prénom} ! Je suis prêt à vous aider. Posez-moi vos questions sur vos exercices, votre ressenti, ou demandez des conseils généraux. Si besoin, je vous proposerai de contacter votre kiné.` // Simplified welcome message
            };
            setMessages([welcomeMessage]);
       }
@@ -224,24 +224,31 @@ export default function PatientChatbot({ patient }: PatientChatbotProps) { // De
 
   return (
     <Card className="shadow-md h-[75vh] flex flex-col"> {/* Use Card and set height */}
-        <CardHeader className="border-b flex flex-col p-4 space-y-2"> {/* Changed flex-row to flex-col and added space-y */}
+        <CardHeader className="border-b p-4"> {/* Removed flex properties */}
              <div className="flex items-center gap-3"> {/* Wrap title and icon */}
                  <Avatar className="w-10 h-10 border-2 border-primary bg-primary/20 text-primary flex-shrink-0">
                      <AvatarFallback><Sparkles className="w-5 h-5" /></AvatarFallback>
                  </Avatar>
                  <div>
                     <CardTitle className="text-lg">Votre Assistant Kiné Personnalisé</CardTitle>
+                    <CardDescription className="text-sm text-muted-foreground">L'assistant virtuel de votre kiné.</CardDescription>
                  </div>
              </div>
-             {/* Enhanced Description */}
-              <CardDescription className="text-sm text-muted-foreground leading-relaxed">
-                   Cet assistant est là pour vous guider ! Il connaît <span className='font-semibold text-foreground'>votre programme spécifique</span>, vos <span className='font-semibold text-foreground'>objectifs personnels</span> et est <span className='font-semibold text-foreground'>personnalisé grâce aux conseils spécifiques de votre kiné</span>. Il agit comme l'assistant de votre thérapeute, connaissant ses recommandations pour vous. N'hésitez pas à lui poser des questions sur un exercice, une douleur ressentie (sans demander de diagnostic médical), ou si vous avez un doute. S'il ne peut pas répondre, il vous proposera de <span className='font-semibold text-foreground'>contacter directement votre kiné</span>.
-              </CardDescription>
         </CardHeader>
 
-        <CardContent className="flex-grow p-0 overflow-hidden"> {/* Content takes remaining space, no padding */}
-           <ScrollArea className="h-full p-4" ref={scrollAreaRef}> {/* ScrollArea fills CardContent */}
-             <div className="space-y-4 pb-4"> {/* Add padding bottom inside scroll area */}
+         <CardContent className="flex-grow p-4 overflow-hidden flex flex-col gap-4"> {/* Added padding and flex */}
+            {/* Enhanced Description in Alert */}
+            <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20 flex-shrink-0">
+                <Info className="h-4 w-4 !text-primary" />
+                <AlertTitle className="ml-6 text-primary">Un assistant à votre service</AlertTitle>
+                <AlertDescription className="ml-6 text-primary/90 text-xs">
+                    Cet assistant est là pour vous guider ! Il connaît <span className='font-semibold'>votre programme spécifique</span>, vos <span className='font-semibold'>objectifs personnels</span> et est <span className='font-semibold'>personnalisé grâce aux conseils spécifiques de votre kiné</span>. Il agit comme l'assistant de votre thérapeute, connaissant ses recommandations pour vous. N'hésitez pas à lui poser des questions sur un exercice, une douleur ressentie (sans demander de diagnostic médical), ou si vous avez un doute. S'il ne peut pas répondre, il vous proposera de <span className='font-semibold'>contacter directement votre kiné</span>.
+                </AlertDescription>
+            </Alert>
+
+            {/* Chat Area */}
+           <ScrollArea className="h-full flex-grow" ref={scrollAreaRef}> {/* ScrollArea fills remaining space */}
+             <div className="space-y-4 pb-4 pr-2"> {/* Add padding bottom and right */}
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -309,12 +316,12 @@ export default function PatientChatbot({ patient }: PatientChatbotProps) { // De
               )}
              </div>
            </ScrollArea>
-        </CardContent>
+          </CardContent>
 
 
           {isEscalating ? (
               // Escalation Input Area
-               <div className="p-4 border-t bg-muted/30">
+               <div className="p-4 border-t bg-muted/30 flex-shrink-0">
                   <p className="text-sm font-medium mb-2 text-foreground">Transférer à votre kiné :</p>
                   <Textarea
                       placeholder="Ajoutez des détails si nécessaire..."
@@ -337,7 +344,7 @@ export default function PatientChatbot({ patient }: PatientChatbotProps) { // De
               </div>
           ) : (
                // Normal Chat Input Area
-               <div className="p-4 border-t bg-muted/30">
+               <div className="p-4 border-t bg-muted/30 flex-shrink-0">
                  <div className="flex gap-2 w-full items-center">
                   <Input
                     ref={inputRef}
