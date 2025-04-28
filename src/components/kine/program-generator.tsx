@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox'; // Import Checkbox
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'; // Import FormDescription
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Sparkles, Cog } from 'lucide-react';
 import type { Patient, Kine, ProgramGenerationInput } from '@/interfaces';
@@ -90,10 +90,34 @@ export default function ProgramGenerator({ patient, kine, onProgramGenerated }: 
     console.log("Sending data to AI for program generation:", input);
 
     try {
-        const result = await generateExerciseProgram(input); // Call Genkit flow
-        console.log("AI Generated Program (Raw):", result.exerciseProgram);
-        setGeneratedProgram(result.exerciseProgram); // Display the raw program for now
-        onProgramGenerated(result.exerciseProgram); // Pass raw data to parent
+        // TODO: Update Genkit flow 'generateExerciseProgram' to accept and use new fields
+        // const result = await generateExerciseProgram(input);
+        // console.log("AI Generated Program (Raw):", result.exerciseProgram);
+        // setGeneratedProgram(result.exerciseProgram); // Display the raw program for now
+        // onProgramGenerated(result.exerciseProgram); // Pass raw data to parent
+
+        // --- Mock Response (Remove when Genkit flow is updated) ---
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        const mockProgramText = `
+Programme pour ${patient.prénom} ${patient.nom} (Condition: ${input.patientCondition})
+Objectifs: ${input.patientGoals}
+Matériel: ${input.availableEquipment.join(', ')}
+Jours: ${input.workoutDays.join(', ')}
+Remarques: ${input.specificRemarks || 'Aucune'}
+
+Séance Type (Exemple - à générer par IA):
+1. Échauffement (5 min)
+2. Squats (si matériel aucun/haltères) - 3x12
+3. Rowing Élastique (si matériel elastiques) - 3x15
+4. Étirement Ischios - 2x30sec
+5. Gainage planche - 3x30sec
+
+Refroidissement (5 min)
+        `;
+        setGeneratedProgram(mockProgramText);
+        onProgramGenerated(mockProgramText);
+        // --- End Mock Response ---
+
 
         toast({
             title: "Programme Généré !",
@@ -130,7 +154,7 @@ export default function ProgramGenerator({ patient, kine, onProgramGenerated }: 
               control={form.control} name="programGoals"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Objectifs Spécifiques du Programme</FormLabel>
+                  <FormLabel>Objectifs Spécifiques du Programme <span className="text-red-500">*</span></FormLabel>
                   <FormControl><Textarea placeholder="ex: Réduire la douleur lombaire de 50% en 4 semaines, reprendre la course 10min sans douleur..." {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
@@ -143,7 +167,7 @@ export default function ProgramGenerator({ patient, kine, onProgramGenerated }: 
               render={() => (
                 <FormItem>
                   <div className="mb-4">
-                    <FormLabel className="text-base">Matériel Disponible chez le Patient</FormLabel>
+                    <FormLabel className="text-base">Matériel Disponible chez le Patient <span className="text-red-500">*</span></FormLabel>
                     <FormDescription>Cochez tout le matériel à disposition.</FormDescription>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -185,7 +209,7 @@ export default function ProgramGenerator({ patient, kine, onProgramGenerated }: 
               render={() => (
                 <FormItem>
                    <div className="mb-4">
-                    <FormLabel className="text-base">Jours d'Entraînement Souhaités</FormLabel>
+                    <FormLabel className="text-base">Jours d'Entraînement Souhaités <span className="text-red-500">*</span></FormLabel>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {workoutDaysOptions.map((item) => (
