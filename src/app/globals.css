@@ -81,11 +81,7 @@ body {
     --sidebar-ring: 210 90% 60%; /* Bright Blue Ring */
   }
 
-   /* Moved styles from the second @layer base here */
-   * {
-    @apply border-border;
-   }
-   body {
+  body {
     @apply bg-background text-foreground;
-   }
+  }
 }
