@@ -80,13 +80,12 @@ body {
     --sidebar-border: 220 10% 25%; /* Dark Border */
     --sidebar-ring: 210 90% 60%; /* Bright Blue Ring */
   }
-}
 
-@layer base {
-  * {
+   /* Moved styles from the second @layer base here */
+   * {
     @apply border-border;
-  }
-  body {
+   }
+   body {
     @apply bg-background text-foreground;
-  }
+   }
 }
