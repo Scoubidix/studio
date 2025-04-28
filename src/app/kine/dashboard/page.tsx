@@ -26,7 +26,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import type { Patient, Kine, Feedback, MessageToKine, ShopProgram, BlogPost, RehabProtocol, CertificationBadge, Exercise, BlogPostFormData } from '@/interfaces';
 import { mockFeedbacks } from '@/components/kine/mock-data';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Award, ChevronDown, ChevronUp, Bot, Share2, Star, Trophy, Users, BarChart3, Crown, Dumbbell, Cog, Edit, Brain, Info } from 'lucide-react'; // Added Dumbbell, Cog, Edit, Brain, Info
+import { PlusCircle, CalendarDays, BellRing, UserCheck, BookOpen, Store, Award, ChevronDown, ChevronUp, Bot, Share2, Star, Trophy, Users, BarChart3, Crown, Dumbbell, Cog, Edit, Brain, Info, Send } from 'lucide-react'; // Added Dumbbell, Cog, Edit, Brain, Info, Send
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import KineCertificationDisplay from '@/components/patient/kine-certification-display'; // Import display component (can reuse)
@@ -478,20 +478,18 @@ export default function KineDashboard() {
 
       {/* Main Dashboard */}
       <Tabs defaultValue="chatbot" className="w-full"> {/* Default to chatbot */}
-        {/* Updated grid columns and added new tabs */}
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 mb-6"> {/* Adjusted grid columns */}
+        {/* Updated grid columns and removed integrated tabs */}
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6"> {/* Adjusted grid columns */}
             {/* Highlighted Chatbot Tab */}
              <TabsTrigger value="chatbot" className="bg-primary/10 text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Bot className="w-4 h-4 mr-1 md:mr-2"/>Chatbot Mak
              </TabsTrigger>
             <TabsTrigger value="patients"><UserCheck className="w-4 h-4 mr-1 md:mr-2"/>Gestion Patients</TabsTrigger>
-            <TabsTrigger value="generation"><Cog className="w-4 h-4 mr-1 md:mr-2"/>Gén. Programme</TabsTrigger>
+            {/* <TabsTrigger value="generation"><Cog className="w-4 h-4 mr-1 md:mr-2"/>Gén. Programme</TabsTrigger> REMOVED */}
             <TabsTrigger value="exercices"><Dumbbell className="w-4 h-4 mr-1 md:mr-2"/>Base Exercices</TabsTrigger>
-            <TabsTrigger value="collaboration"><Users className="w-4 h-4 mr-1 md:mr-2"/>KinéHub Collab</TabsTrigger>
-            {/* <TabsTrigger value="reputation"><BarChart3 className="w-4 h-4 mr-1 md:mr-2"/>KinéHub Réputation</TabsTrigger> REMOVED */}
+            {/* <TabsTrigger value="collaboration"><Users className="w-4 h-4 mr-1 md:mr-2"/>KinéHub Collab</TabsTrigger> REMOVED */}
             <TabsTrigger value="marketplace"><Store className="w-4 h-4 mr-1 md:mr-2"/>Marketplace</TabsTrigger>
             <TabsTrigger value="blog"><BookOpen className="w-4 h-4 mr-1 md:mr-2"/>Blog Pro</TabsTrigger>
-            {/* <TabsTrigger value="certifications"><Award className="w-4 h-4 mr-1 md:mr-2"/>Badges Pro</TabsTrigger> REMOVED */}
         </TabsList>
 
          {/* Kine Chatbot Tab */}
@@ -522,7 +520,7 @@ export default function KineDashboard() {
                  <UserCheck className="h-4 w-4 !text-primary" />
                  <AlertTitle className="ml-6 text-primary">Gestion Centralisée des Patients</AlertTitle>
                  <AlertDescription className="ml-6 text-primary/90 text-xs">
-                     Ajoutez de nouveaux patients, consultez et mettez à jour leurs informations, bilans, objectifs et suivez leurs feedbacks et progrès en un seul endroit. Utilisez le sélecteur pour naviguer entre les dossiers.
+                     Ajoutez de nouveaux patients, consultez leurs informations, bilans, objectifs, feedbacks et progrès. Générez des programmes assistés par IA et gérez la collaboration avec d'autres kinés.
                  </AlertDescription>
              </Alert>
              <Card className="shadow-md">
@@ -549,8 +547,8 @@ export default function KineDashboard() {
                 </CardContent>
              </Card>
 
-              {/* Selected Patient Details Area */}
-              {selectedPatientId && selectedPatient ? (
+              {/* Selected Patient Details Area - Now includes generator and collaboration */}
+              {selectedPatientId && selectedPatient && kineData ? (
                 <div className="space-y-8"> {/* Changed grid to space-y */}
                     {/* Collapsible Accordion for Patient Info and Assessment */}
                      <Accordion type="single" collapsible value={isPatientInfoOpen ? "patient-info" : ""} onValueChange={(value) => setIsPatientInfoOpen(value === "patient-info")}>
@@ -569,6 +567,65 @@ export default function KineDashboard() {
 
                    {/* Feedback Display always visible below accordion */}
                    <PatientFeedbackDisplay patientId={selectedPatientId} />
+
+                   {/* Program Generator integrated here */}
+                   <Accordion type="single" collapsible className="w-full">
+                        <AccordionItem value="program-generator" className="border rounded-lg shadow-md overflow-hidden">
+                             <AccordionTrigger className="text-lg font-semibold px-6 py-4 bg-card hover:bg-muted/50 hover:no-underline data-[state=open]:border-b">
+                                <div className="flex items-center gap-2">
+                                    <Cog className="w-5 h-5 text-primary" />
+                                    Génération de Programme Assistée par IA
+                                </div>
+                             </AccordionTrigger>
+                             <AccordionContent className="bg-card p-0">
+                                <Alert variant="default" className="border-none rounded-none bg-primary/5 dark:bg-primary/20">
+                                     <Cog className="h-4 w-4 !text-primary" />
+                                     <AlertTitle className="ml-6 text-primary text-base">Générer un brouillon de programme</AlertTitle>
+                                     <AlertDescription className="ml-6 text-primary/90 text-xs">
+                                        Utilisez l'IA pour créer rapidement une base de programme personnalisée. Renseignez les objectifs, le matériel, les jours et les remarques. L'IA génère une proposition que vous pouvez ensuite affiner.
+                                     </AlertDescription>
+                                 </Alert>
+                                 <div className="p-6">
+                                     <ProgramGenerator
+                                        patient={selectedPatient}
+                                        kine={kineData}
+                                        onProgramGenerated={handleProgramGenerated}
+                                     />
+                                 </div>
+                             </AccordionContent>
+                        </AccordionItem>
+                   </Accordion>
+
+                   {/* Kine Collaboration Hub integrated here */}
+                   <Accordion type="single" collapsible className="w-full">
+                        <AccordionItem value="kine-collaboration" className="border rounded-lg shadow-md overflow-hidden">
+                             <AccordionTrigger className="text-lg font-semibold px-6 py-4 bg-card hover:bg-muted/50 hover:no-underline data-[state=open]:border-b">
+                                 <div className="flex items-center gap-2">
+                                    <Users className="w-5 h-5 text-primary" />
+                                    KinéHub - Collaboration
+                                 </div>
+                             </AccordionTrigger>
+                             <AccordionContent className="bg-card p-0">
+                                 <Alert variant="default" className="border-none rounded-none bg-primary/5 dark:bg-primary/20">
+                                     <Users className="h-4 w-4 !text-primary" />
+                                     <AlertTitle className="ml-6 text-primary text-base">Collaborer sur ce Patient</AlertTitle>
+                                     <AlertDescription className="ml-6 text-primary/90 text-xs">
+                                        Besoin de transférer ce patient pendant vos absences ou de partager son dossier pour un avis ou une prise en charge partagée ? Utilisez KinéHub pour une collaboration fluide et sécurisée.
+                                     </AlertDescription>
+                                 </Alert>
+                                  <div className="p-6">
+                                      <KineCollaborationHub
+                                        currentKineId={kineData.id}
+                                        selectedPatient={selectedPatient}
+                                        otherKines={mockOtherKines} // Pass mock or fetched list of other kines
+                                        onTransferPatient={handleTransferPatient}
+                                        onSharePatient={handleSharePatient}
+                                    />
+                                  </div>
+                             </AccordionContent>
+                        </AccordionItem>
+                   </Accordion>
+
                    {/* TODO: Add Progress Test Results display for Kine */}
                    {/* <div className="lg:col-span-2"> ...ProgressTestResultsDisplay... </div> */}
                 </div>
@@ -583,30 +640,8 @@ export default function KineDashboard() {
               )}
         </TabsContent>
 
-         {/* Program Generation Tab */}
-         <TabsContent value="generation" className="space-y-6">
-            {/* Added Alert */}
-             <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20">
-                 <Cog className="h-4 w-4 !text-primary" />
-                 <AlertTitle className="ml-6 text-primary">Génération de Programme Assistée par IA</AlertTitle>
-                 <AlertDescription className="ml-6 text-primary/90 text-xs">
-                    Utilisez la puissance de l'IA pour créer rapidement une base de programme personnalisée. Renseignez les objectifs, le matériel disponible, les jours d'entraînement et les remarques spécifiques. L'IA génère une proposition que vous pouvez ensuite affiner et assigner.
-                 </AlertDescription>
-             </Alert>
-            {selectedPatientId && selectedPatient && kineData ? (
-                 <ProgramGenerator
-                    patient={selectedPatient}
-                    kine={kineData}
-                    onProgramGenerated={handleProgramGenerated}
-                 />
-            ) : (
-                 <Card>
-                     <CardContent className="p-6 text-center text-muted-foreground">
-                         Sélectionnez un patient pour générer un programme.
-                     </CardContent>
-                 </Card>
-            )}
-         </TabsContent>
+         {/* Program Generation Tab - REMOVED */}
+         {/* <TabsContent value="generation"> ... </TabsContent> */}
 
           {/* Exercise Database Tab */}
          <TabsContent value="exercices" className="space-y-6">
@@ -640,32 +675,8 @@ export default function KineDashboard() {
          </TabsContent>
 
 
-         {/* KinéHub Collaboration Tab */}
-        <TabsContent value="collaboration" className="space-y-6">
-             {/* Added Alert */}
-             <Alert variant="default" className="border-primary bg-primary/5 dark:bg-primary/20">
-                 <Users className="h-4 w-4 !text-primary" />
-                 <AlertTitle className="ml-6 text-primary">Collaborez Facilement avec vos Confrères</AlertTitle>
-                 <AlertDescription className="ml-6 text-primary/90 text-xs">
-                     Besoin de transférer un patient pendant vos absences ou de partager un dossier pour un avis ou une prise en charge partagée au sein d'un cabinet ? Utilisez KinéHub pour une collaboration fluide et sécurisée entre kinés de la plateforme.
-                 </AlertDescription>
-             </Alert>
-             {kineData && selectedPatient ? (
-                 <KineCollaborationHub
-                    currentKineId={kineData.id}
-                    selectedPatient={selectedPatient}
-                    otherKines={mockOtherKines} // Pass mock or fetched list of other kines
-                    onTransferPatient={handleTransferPatient}
-                    onSharePatient={handleSharePatient}
-                />
-             ) : (
-                 <Card>
-                     <CardContent className="p-6 text-center text-muted-foreground">
-                         Sélectionnez un patient pour voir les options de collaboration.
-                     </CardContent>
-                 </Card>
-             )}
-        </TabsContent>
+         {/* KinéHub Collaboration Tab - REMOVED */}
+         {/* <TabsContent value="collaboration"> ... </TabsContent> */}
 
          {/* KinéHub Reputation Tab - REMOVED */}
          {/* <TabsContent value="reputation"> ... </TabsContent> */}
@@ -740,3 +751,4 @@ export default function KineDashboard() {
     </div>
   );
 }
+
