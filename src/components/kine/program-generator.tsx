@@ -68,12 +68,18 @@ export default function ProgramGenerator({ patient, kine, onProgramGenerated }: 
   const form = useForm<ProgramGenerationFormData>({
     resolver: zodResolver(programGenerationSchema),
     defaultValues: {
-      programGoals: '',
+      programGoals: patient.objectifs?.join(', ') || '', // Pre-fill with patient objectives
       availableEquipment: [],
       workoutDays: [],
       specificRemarks: '',
     },
   });
+
+   // Update default goals when patient changes
+   React.useEffect(() => {
+      form.setValue('programGoals', patient.objectifs?.join(', ') || '');
+   }, [patient, form]);
+
 
   const handleGenerateProgram = async (values: ProgramGenerationFormData) => {
     setIsGenerating(true);
@@ -116,132 +122,125 @@ export default function ProgramGenerator({ patient, kine, onProgramGenerated }: 
   };
 
   return (
-    <Card className="shadow-md">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Cog className="w-5 h-5 text-primary" /> Générateur de Programme IA
-        </CardTitle>
-        <CardDescription>
-          Configurez les paramètres pour que l'IA génère un programme progressif d'un mois pour <span className="font-semibold">{patient.prénom} {patient.nom}</span>.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    // Removed Card wrapper, assuming it's within an AccordionContent that provides padding
+    // Use space-y for vertical spacing within the form area
+    <div className="space-y-6">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleGenerateProgram)} className="space-y-6">
-            {/* Program Goals */}
-            <FormField
-              control={form.control} name="programGoals"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Objectifs Spécifiques du Programme <span className="text-red-500">*</span></FormLabel>
-                  <FormControl><Textarea placeholder="ex: Réduire la douleur lombaire de 50% en 4 semaines, reprendre la course 10min sans douleur..." {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <form onSubmit={form.handleSubmit(handleGenerateProgram)} className="space-y-6">
+                {/* Program Goals */}
+                <FormField
+                control={form.control} name="programGoals"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Objectifs Spécifiques du Programme <span className="text-red-500">*</span></FormLabel>
+                    <FormControl><Textarea placeholder="ex: Réduire la douleur lombaire de 50% en 4 semaines, reprendre la course 10min sans douleur..." {...field} /></FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
 
-             {/* Available Equipment */}
-            <FormField
-              control={form.control} name="availableEquipment"
-              render={() => (
-                <FormItem>
-                  <div className="mb-4">
-                    <FormLabel className="text-base">Matériel Disponible chez le Patient <span className="text-red-500">*</span></FormLabel>
-                    <FormDescription>Cochez tout le matériel à disposition.</FormDescription>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    {equipmentOptions.map((item) => (
-                      <FormField
-                        key={item.id} control={form.control} name="availableEquipment"
-                        render={({ field }) => {
-                          return (
-                            <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(item.id)}
-                                  onCheckedChange={(checked) => {
-                                    return checked
-                                      ? field.onChange([...(field.value ?? []), item.id])
-                                      : field.onChange(
-                                          (field.value ?? []).filter(
-                                            (value) => value !== item.id
-                                          )
-                                        )
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="text-sm font-normal">{item.label}</FormLabel>
-                            </FormItem>
-                          )
-                        }}
-                      />
-                    ))}
-                   </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                {/* Available Equipment */}
+                <FormField
+                control={form.control} name="availableEquipment"
+                render={() => (
+                    <FormItem>
+                    <div className="mb-2"> {/* Reduced bottom margin */}
+                        <FormLabel className="text-base">Matériel Disponible <span className="text-red-500">*</span></FormLabel>
+                        <FormDescription className="text-xs">Cochez tout le matériel à disposition.</FormDescription>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2"> {/* Adjusted gap */}
+                        {equipmentOptions.map((item) => (
+                        <FormField
+                            key={item.id} control={form.control} name="availableEquipment"
+                            render={({ field }) => {
+                            return (
+                                <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
+                                    <Checkbox
+                                    checked={field.value?.includes(item.id)}
+                                    onCheckedChange={(checked) => {
+                                        return checked
+                                        ? field.onChange([...(field.value ?? []), item.id])
+                                        : field.onChange(
+                                            (field.value ?? []).filter(
+                                                (value) => value !== item.id
+                                            )
+                                            )
+                                    }}
+                                    />
+                                </FormControl>
+                                <FormLabel className="text-sm font-normal">{item.label}</FormLabel>
+                                </FormItem>
+                            )
+                            }}
+                        />
+                        ))}
+                    </div>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
 
-            {/* Workout Days */}
-            <FormField
-              control={form.control} name="workoutDays"
-              render={() => (
-                <FormItem>
-                   <div className="mb-4">
-                    <FormLabel className="text-base">Jours d'Entraînement Souhaités <span className="text-red-500">*</span></FormLabel>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {workoutDaysOptions.map((item) => (
-                      <FormField
-                        key={item.id} control={form.control} name="workoutDays"
-                        render={({ field }) => {
-                          return (
-                            <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(item.id)}
-                                  onCheckedChange={(checked) => {
-                                    return checked
-                                      ? field.onChange([...(field.value ?? []), item.id])
-                                      : field.onChange(
-                                          (field.value ?? []).filter(
-                                            (value) => value !== item.id
-                                          )
-                                        )
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="text-sm font-normal">{item.label}</FormLabel>
-                            </FormItem>
-                          )
-                        }}
-                      />
-                    ))}
-                   </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                {/* Workout Days */}
+                <FormField
+                control={form.control} name="workoutDays"
+                render={() => (
+                    <FormItem>
+                    <div className="mb-2"> {/* Reduced bottom margin */}
+                        <FormLabel className="text-base">Jours d'Entraînement <span className="text-red-500">*</span></FormLabel>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2"> {/* Adjusted gap */}
+                        {workoutDaysOptions.map((item) => (
+                        <FormField
+                            key={item.id} control={form.control} name="workoutDays"
+                            render={({ field }) => {
+                            return (
+                                <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
+                                    <Checkbox
+                                    checked={field.value?.includes(item.id)}
+                                    onCheckedChange={(checked) => {
+                                        return checked
+                                        ? field.onChange([...(field.value ?? []), item.id])
+                                        : field.onChange(
+                                            (field.value ?? []).filter(
+                                                (value) => value !== item.id
+                                            )
+                                            )
+                                    }}
+                                    />
+                                </FormControl>
+                                <FormLabel className="text-sm font-normal">{item.label}</FormLabel>
+                                </FormItem>
+                            )
+                            }}
+                        />
+                        ))}
+                    </div>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
 
 
-             {/* Specific Remarks */}
-            <FormField
-              control={form.control} name="specificRemarks"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Remarques Particulières pour l'IA (optionnel)</FormLabel>
-                  <FormControl><Textarea placeholder="ex: Insister sur les étirements, éviter les exercices en charge axiale..." {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                {/* Specific Remarks */}
+                <FormField
+                control={form.control} name="specificRemarks"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Remarques Particulières pour l'IA (optionnel)</FormLabel>
+                    <FormControl><Textarea placeholder="ex: Insister sur les étirements, éviter les exercices en charge axiale..." {...field} /></FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
 
-            {/* Submit Button */}
-            <Button type="submit" disabled={isGenerating} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-              {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-              {isGenerating ? 'Génération en cours...' : 'Générer le Programme via IA'}
-            </Button>
-          </form>
+                {/* Submit Button */}
+                <Button type="submit" disabled={isGenerating} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                {isGenerating ? 'Génération en cours...' : 'Générer le Programme via IA'}
+                </Button>
+            </form>
         </Form>
 
         {/* Display Generated Program */}
@@ -254,11 +253,11 @@ export default function ProgramGenerator({ patient, kine, onProgramGenerated }: 
                       <ReactMarkdown
                          className="prose prose-sm dark:prose-invert max-w-none" // Basic prose styling
                          components={{ // Customize rendering if needed
-                           h2: ({node, ...props}) => <h2 className="text-lg font-semibold mt-4 mb-2" {...props} />,
-                           h3: ({node, ...props}) => <h3 className="text-md font-semibold mt-3 mb-1" {...props} />,
-                           ul: ({node, ...props}) => <ul className="list-disc pl-5 space-y-1" {...props} />,
+                           h2: ({node, ...props}) => <h2 className="text-base font-semibold mt-4 mb-1" {...props} />, // Adjusted sizes
+                           h3: ({node, ...props}) => <h3 className="text-sm font-semibold mt-3 mb-1" {...props} />, // Adjusted sizes
+                           ul: ({node, ...props}) => <ul className="list-disc pl-4 space-y-0.5" {...props} />, // Adjusted spacing
                            li: ({node, ...props}) => <li className="text-xs" {...props} />,
-                           p: ({node, ...props}) => <p className="text-xs mb-2" {...props} />,
+                           p: ({node, ...props}) => <p className="text-xs mb-1" {...props} />, // Adjusted spacing
                            strong: ({node, ...props}) => <strong className="font-medium text-foreground" {...props} />,
                          }}
                        >
@@ -272,9 +271,6 @@ export default function ProgramGenerator({ patient, kine, onProgramGenerated }: 
                  {/* Example: <Button variant="outline" size="sm" className="mt-2">Assigner ce Programme</Button> */}
             </div>
         )}
-
-      </CardContent>
-    </Card>
+    </div>
   );
 }
-```

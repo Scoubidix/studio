@@ -93,4 +93,3 @@ const generateExerciseProgramFlow = ai.defineFlow<
     return output;
   }
 );
-```
